@@ -6,13 +6,22 @@ The COTI Blockchain MCP integrates COTI blockchain access into Claude AI and oth
 
 ## Available Tools
 
-### coti_get_balance
+### coti_get_native_balance
 
 **Description:**  
 Get the native COTI token balance of a COTI blockchain account using the official @coti-io/coti-ethers library. This is used for checking the current native token balance of a COTI account. Returns the account balance in both raw (Wei) and formatted (COTI) units.
 
 **Input Parameters:**
 - `account_address` (required): COTI account address, e.g., coti1abcdef1234567890abcdef1234567890abcdef
+
+### coti_get_private_erc20_token_balance
+
+**Description:**  
+Get the balance of a private ERC20 token on the COTI blockchain using the official @coti-io/coti-ethers library. This is used for checking the current balance of a private ERC20 token on the COTI blockchain. Returns the token balance in both raw (Wei) and formatted (COTI) units.
+
+**Input Parameters:**
+- `account_address` (required): COTI account address, e.g., coti1abcdef1234567890abcdef1234567890abcdef
+- `token_address` (required): ERC20 token address, e.g., 0x1234567890abcdef1234567890abcdef12345678
 
 ## Requirements
 
@@ -51,7 +60,8 @@ Add the following entry to `mcpServers`:
       "path\\build\\index.js"
     ],
     "env": {
-      "COTI_MCP_AES_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+      "COTI_MCP_AES_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "COTI_MCP_PRIVATE_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     }
 }
 ```
@@ -69,7 +79,8 @@ so that `mcpServers` will look like this:
         "path\\build\\index.js"
       ],
       "env": {
-        "COTI_MCP_AES_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        "COTI_MCP_AES_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        "COTI_MCP_PRIVATE_KEY": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
       }
     }
   }

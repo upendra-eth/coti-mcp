@@ -21,6 +21,7 @@ RUN chmod +x build/index.js
 
 # Set environment variables for Docker (actual values should be provided at runtime)
 ENV COTI_MCP_AES_KEY=""
+ENV COTI_MCP_PRIVATE_KEY=""
 
 # Command to run the MCP server
 CMD ["node", "build/index.js"]
