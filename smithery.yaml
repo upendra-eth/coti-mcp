@@ -1,0 +1,24 @@
+# Smithery.ai configuration
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - cotiMcpAesKey
+    properties:
+      cotiMcpAesKey:
+        type: string
+        description: COTI MCP AES key for accessing the COTI MCP API.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    (config) => ({
+      command: 'node',
+      args: ['build/index.js'],
+      env: {
+        COTI_MCP_AES_KEY: config.cotiMcpAesKey
+      }
+    })
+  exampleConfig:
+    cotiMcpAesKey: YOUR_COTI_MCP_AES_KEY_HERE
