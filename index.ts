@@ -7,15 +7,40 @@ import {
     ListToolsRequestSchema,
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, ethers } from '@coti-io/coti-ethers';
+import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 
-const GET_COTI_BALANCE: Tool = {
-    name: "coti_get_balance",
+// ERC20 ABI for interacting with token contracts
+const ERC20_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: "_owner", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "balance", type: "uint256" }],
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    type: "function",
+  },
+];
+
+const GET_COTI_NATIVE_BALANCE: Tool = {
+    name: "coti_get_native_balance",
     description:
-        "Get the balance of a COTI blockchain account." +
+        "Get the native COTI token balance of a COTI blockchain account." +
         "This is used for checking the current balance of a COTI account." +
         "Requires a COTI account address as input." +
-        "Returns the account balance and additional account information.",
+        "Returns the account balance in COTI tokens.",
     inputSchema: {
         type: "object",
         properties: {
@@ -25,6 +50,29 @@ const GET_COTI_BALANCE: Tool = {
             }
         },
         required: ["account_address"],
+    },
+};
+
+const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
+    name: "coti_get_private_erc20_token_balance",
+    description:
+        "Get the balance of a private ERC20 token on the COTI blockchain." +
+        "This is used for checking the current balance of a private token for a COTI account." +
+        "Requires a COTI account address and token contract address as input." +
+        "Returns the decrypted token balance.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            account_address: {
+                type: "string",
+                description: "COTI account address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+            },
+            token_address: {
+                type: "string",
+                description: "ERC20 token contract address on COTI blockchain",
+            },
+        },
+        required: ["account_address", "token_address"],
     },
 };
 
@@ -46,12 +94,29 @@ if (!COTI_MCP_AES_KEY) {
     process.exit(1);
 }
 
+const COTI_MCP_PRIVATE_KEY = process.env.COTI_MCP_PRIVATE_KEY!;
+if (!COTI_MCP_PRIVATE_KEY) {
+    console.error("Error: COTI_MCP_PRIVATE_KEY environment variable is required");
+    process.exit(1);
+}
+
 function isGetCotiBalanceArgs(args: unknown): args is { account_address: string } {
     return (
         typeof args === "object" &&
         args !== null &&
         "account_address" in args &&
         typeof (args as { account_address: string }).account_address === "string"
+    );
+}
+
+function isGetPrivateERC20TokenBalanceArgs(args: unknown): args is { account_address: string, token_address: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "account_address" in args &&
+        typeof (args as { account_address: string }).account_address === "string" &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string"
     );
 }
 
@@ -70,8 +135,33 @@ async function performGetCotiBalance(account_address: string) {
     }
 }
 
+async function performGetPrivateERC20TokenBalance(account_address: string, token_address: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+
+        wallet.setAesKey(COTI_MCP_AES_KEY)
+        
+        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
+        
+        const [decimalsResult, symbolResult] = await Promise.all([
+            tokenContract.decimals(),
+            tokenContract.symbol()
+        ]);
+        
+        const encryptedBalance = await tokenContract.balanceOf(account_address);
+        const decryptedBalance = await wallet.decryptValue(encryptedBalance);
+        const formattedBalance = ethers.formatUnits(decryptedBalance, decimalsResult);
+        
+        return `Balance: ${formattedBalance} ${symbolResult}`;
+    } catch (error) {
+        console.error('Error fetching private token balance:', error);
+        throw new Error(`Failed to get private token balance: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [GET_COTI_BALANCE],
+    tools: [GET_COTI_NATIVE_BALANCE, GET_PRIVATE_ERC20_TOKEN_BALANCE],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -83,13 +173,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         switch (name) {
-            case "coti_get_balance": {
+            case "coti_get_native_balance": {
                 if (!isGetCotiBalanceArgs(args)) {
-                    throw new Error("Invalid arguments for coti_get_balance");
+                    throw new Error("Invalid arguments for coti_get_native_balance");
                 }
                 const { account_address } = args;
 
                 const results = await performGetCotiBalance(account_address);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "coti_get_private_erc20_token_balance": {
+                if (!isGetPrivateERC20TokenBalanceArgs(args)) {
+                    throw new Error("Invalid arguments for coti_get_private_erc20_token_balance");
+                }
+                const { account_address, token_address } = args;
+
+                const results = await performGetPrivateERC20TokenBalance(account_address, token_address);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,

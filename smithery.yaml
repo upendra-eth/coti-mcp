@@ -17,8 +17,10 @@ startCommand:
       command: 'node',
       args: ['build/index.js'],
       env: {
-        COTI_MCP_AES_KEY: config.cotiMcpAesKey
+        COTI_MCP_AES_KEY: config.cotiMcpAesKey,
+        COTI_MCP_PRIVATE_KEY: config.cotiMcpPrivateKey
       }
     })
   exampleConfig:
     cotiMcpAesKey: YOUR_COTI_MCP_AES_KEY_HERE
+    cotiMcpPrivateKey: YOUR_COTI_MCP_PRIVATE_KEY_HERE

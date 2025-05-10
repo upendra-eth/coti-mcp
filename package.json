@@ -1,6 +1,6 @@
 {
     "name": "@davibaue/coti-mcp",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "MCP server for COTI blockchain",
     "license": "MIT",
     "author": "Davi Bauer",
