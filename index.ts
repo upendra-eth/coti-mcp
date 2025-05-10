@@ -9,7 +9,6 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 
-// ERC20 ABI for interacting with token contracts
 const ERC20_ABI = [
   {
     constant: true,
@@ -76,6 +75,33 @@ const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
     },
 };
 
+const TRANSFER_NATIVE_COTI: Tool = {
+    name: "coti_transfer_native",
+    description:
+        "Transfer native COTI tokens to another wallet." +
+        "This is used for sending COTI tokens from your wallet to another address." +
+        "Requires recipient address and amount as input." +
+        "Returns the transaction hash upon successful transfer.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            recipient_address: {
+                type: "string",
+                description: "Recipient COTI address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+            },
+            amount: {
+                type: "string",
+                description: "Amount of COTI to transfer (in COTI units, not Wei)",
+            },
+            gas_limit: {
+                type: "string",
+                description: "Optional gas limit for the transaction",
+            },
+        },
+        required: ["recipient_address", "amount"],
+    },
+};
+
 const server = new Server(
     {
         name: "coti/blockchain-mcp",
@@ -120,6 +146,18 @@ function isGetPrivateERC20TokenBalanceArgs(args: unknown): args is { account_add
     );
 }
 
+function isTransferNativeCotiArgs(args: unknown): args is { recipient_address: string, amount: string, gas_limit?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "recipient_address" in args &&
+        typeof (args as { recipient_address: string }).recipient_address === "string" &&
+        "amount" in args &&
+        typeof (args as { amount: string }).amount === "string" &&
+        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
+    );
+}
+
 async function performGetCotiBalance(account_address: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -160,8 +198,34 @@ async function performGetPrivateERC20TokenBalance(account_address: string, token
     }
 }
 
+async function performTransferNativeCoti(recipient_address: string, amount: string, gas_limit?: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        const amountInWei = ethers.parseUnits(amount, 18);
+        
+        const txOptions: any = {};
+        if (gas_limit) {
+            txOptions.gasLimit = gas_limit;
+        }
+        
+        const tx = await wallet.sendTransaction({
+            to: recipient_address,
+            value: amountInWei,
+            ...txOptions
+        });
+        
+        const receipt = await tx.wait();
+        
+        return `Transaction successful!\nTransaction Hash: ${receipt?.hash}\nAmount: ${amount} COTI\nRecipient: ${recipient_address}`;
+    } catch (error) {
+        console.error('Error transferring COTI tokens:', error);
+        throw new Error(`Failed to transfer COTI tokens: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [GET_COTI_NATIVE_BALANCE, GET_PRIVATE_ERC20_TOKEN_BALANCE],
+    tools: [GET_COTI_NATIVE_BALANCE, GET_PRIVATE_ERC20_TOKEN_BALANCE, TRANSFER_NATIVE_COTI],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -193,6 +257,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { account_address, token_address } = args;
 
                 const results = await performGetPrivateERC20TokenBalance(account_address, token_address);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "coti_transfer_native": {
+                if (!isTransferNativeCotiArgs(args)) {
+                    throw new Error("Invalid arguments for coti_transfer_native");
+                }
+                const { recipient_address, amount, gas_limit } = args;
+
+                const results = await performTransferNativeCoti(recipient_address, amount, gas_limit);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
