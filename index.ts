@@ -49,7 +49,6 @@ if (!COTI_MCP_AES_KEY) {
 interface CotiBalance {
     address: string;
     balance: string;
-    formattedBalance: string;
     currency: string;
 }
 
@@ -65,20 +64,18 @@ function isGetCotiBalanceArgs(args: unknown): args is { account_address: string 
 
 async function performGetCotiBalance(account_address: string) {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Mainnet);
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
         
         const balanceWei = await provider.getBalance(account_address);
         
-        const formattedBalance = ethers.formatUnits(balanceWei, 18);
-        
-        const balance: CotiBalance = {
+        const result: CotiBalance = {
             address: account_address,
             balance: balanceWei.toString(),
-            formattedBalance: formattedBalance,
             currency: 'COTI',
         };
 
-        return balance;
+        return `Balance: ${result.balance.toString()} ${result.currency}`;
+
     } catch (error) {
         console.error('Error fetching COTI balance:', error);
         throw new Error(`Failed to get COTI balance: ${error instanceof Error ? error.message : String(error)}`);
