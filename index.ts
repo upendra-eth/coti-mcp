@@ -68,13 +68,7 @@ async function performGetCotiBalance(account_address: string) {
         
         const balanceWei = await provider.getBalance(account_address);
         
-        const result: CotiBalance = {
-            address: account_address,
-            balance: balanceWei.toString(),
-            currency: 'COTI',
-        };
-
-        return `Balance: ${result.balance.toString()} ${result.currency}`;
+        return `Balance: ${balanceWei.toString()} COTI`;
 
     } catch (error) {
         console.error('Error fetching COTI balance:', error);
