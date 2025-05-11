@@ -34,7 +34,7 @@ const ERC20_ABI = [
 ];
 
 const GET_COTI_NATIVE_BALANCE: Tool = {
-    name: "coti_get_native_balance",
+    name: "get_native_balance",
     description:
         "Get the native COTI token balance of a COTI blockchain account. " +
         "This is used for checking the current balance of a COTI account. " +
@@ -53,7 +53,7 @@ const GET_COTI_NATIVE_BALANCE: Tool = {
 };
 
 const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
-    name: "coti_get_private_erc20_token_balance",
+    name: "get_private_erc20_balance",
     description:
         "Get the balance of a private ERC20 token on the COTI blockchain. " +
         "This is used for checking the current balance of a private token for a COTI account. " +
@@ -76,7 +76,7 @@ const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
 };
 
 const TRANSFER_NATIVE_COTI: Tool = {
-    name: "coti_transfer_native",
+    name: "transfer_native",
     description:
         "Transfer native COTI tokens to another wallet. " +
         "This is used for sending COTI tokens from your wallet to another address. " +
@@ -103,7 +103,7 @@ const TRANSFER_NATIVE_COTI: Tool = {
 };
 
 const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
-    name: "coti_transfer_private_erc20_token",
+    name: "transfer_private_erc20",
     description:
         "Transfer private ERC20 tokens on the COTI blockchain. " +
         "This is used for sending private tokens from your wallet to another address. " +
@@ -133,6 +133,51 @@ const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
     },
 };
 
+const ENCRYPT_VALUE: Tool = {
+    name: "encrypt_value",
+    description:
+        "Encrypt a value using the COTI AES key. " +
+        "This is used for encrypting values to be sent to another address. " +
+        "Requires a value, contract address, and function selector as input. " +
+        "Returns the signature.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            message: {
+                type: "string",
+                description: "Message to encrypt",
+            },
+            contract_address: {
+                type: "string",
+                description: "Contract address",
+            },
+            function_selector: {
+                type: "string",
+                description: "Function selector",
+            },
+        },
+        required: ["message", "contract_address", "function_selector"],
+    },
+};
+
+const DECRYPT_VALUE: Tool = {
+    name: "decrypt_value",
+    description:
+        "Decrypt a value using the COTI AES key. " +
+        "Requires a ciphertext as input. " +
+        "Returns the decrypted value.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            ciphertext: {
+                type: "string",
+                description: "Ciphertext to decrypt",
+            },
+        },
+        required: ["ciphertext"],
+    },
+};
+
 const server = new Server(
     {
         name: "coti/blockchain-mcp",
@@ -154,6 +199,12 @@ if (!COTI_MCP_AES_KEY) {
 const COTI_MCP_PRIVATE_KEY = process.env.COTI_MCP_PRIVATE_KEY!;
 if (!COTI_MCP_PRIVATE_KEY) {
     console.error("Error: COTI_MCP_PRIVATE_KEY environment variable is required");
+    process.exit(1);
+}
+
+const COTI_MCP_PUBLIC_KEY = process.env.COTI_MCP_PUBLIC_KEY!;
+if (!COTI_MCP_PUBLIC_KEY) {
+    console.error("Error: COTI_MCP_PUBLIC_KEY environment variable is required");
     process.exit(1);
 }
 
@@ -203,6 +254,28 @@ function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_address
     );
 }
 
+function isEncryptValueArgs(args: unknown): args is { message: string, contract_address: string, function_selector: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "message" in args &&
+        typeof (args as { message: string }).message === "string" &&
+        "contract_address" in args &&
+        typeof (args as { contract_address: string }).contract_address === "string" &&
+        "function_selector" in args &&
+        typeof (args as { function_selector: string }).function_selector === "string"
+    );
+}
+
+function isDecryptValueArgs(args: unknown): args is { ciphertext: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "ciphertext" in args &&
+        typeof (args as { ciphertext: string }).ciphertext === "string"
+    );
+}
+
 async function performGetCotiBalance(account_address: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -236,7 +309,7 @@ async function performGetPrivateERC20TokenBalance(account_address: string, token
         const decryptedBalance = await wallet.decryptValue(encryptedBalance);
         const formattedBalance = ethers.formatUnits(decryptedBalance, decimalsResult);
         
-        return `Balance: ${formattedBalance} ${symbolResult}`;
+        return `Balance: ${formattedBalance}\nDecimals: ${decimalsResult}\nSymbol: ${symbolResult}`;
     } catch (error) {
         console.error('Error fetching private token balance:', error);
         throw new Error(`Failed to get private token balance: ${error instanceof Error ? error.message : String(error)}`);
@@ -297,8 +370,44 @@ async function performTransferPrivateERC20Token(token_address: string, recipient
     }
 }
 
+async function performEncryptValue(message: bigint | number | string, contractAddress: string, functionSelector: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        const encryptedMessage = await wallet.encryptValue(message, contractAddress, functionSelector);
+        
+        return `Encrypted Message: ${encryptedMessage}`;
+    } catch (error) {
+        console.error('Error encrypting message:', error);
+        throw new Error(`Failed to encrypt message: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performDecryptValue(ciphertext: bigint) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        
+        const decryptedMessage = await wallet.decryptValue(ciphertext);
+        
+        return `Decrypted Message: ${decryptedMessage}`;
+    } catch (error) {
+        console.error('Error decrypting message:', error);
+        throw new Error(`Failed to decrypt message: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [GET_COTI_NATIVE_BALANCE, GET_PRIVATE_ERC20_TOKEN_BALANCE, TRANSFER_NATIVE_COTI, TRANSFER_PRIVATE_ERC20_TOKEN],
+    tools: [
+        GET_COTI_NATIVE_BALANCE, 
+        GET_PRIVATE_ERC20_TOKEN_BALANCE, 
+        TRANSFER_NATIVE_COTI, 
+        TRANSFER_PRIVATE_ERC20_TOKEN, 
+        ENCRYPT_VALUE, 
+        DECRYPT_VALUE
+    ],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -310,9 +419,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         switch (name) {
-            case "coti_get_native_balance": {
+            case "get_native_balance": {
                 if (!isGetCotiBalanceArgs(args)) {
-                    throw new Error("Invalid arguments for coti_get_native_balance");
+                    throw new Error("Invalid arguments for get_native_balance");
                 }
                 const { account_address } = args;
 
@@ -323,9 +432,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 };
             }
             
-            case "coti_get_private_erc20_token_balance": {
+            case "get_private_erc20_balance": {
                 if (!isGetPrivateERC20TokenBalanceArgs(args)) {
-                    throw new Error("Invalid arguments for coti_get_private_erc20_token_balance");
+                    throw new Error("Invalid arguments for get_private_erc20_balance");
                 }
                 const { account_address, token_address } = args;
 
@@ -336,9 +445,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 };
             }
             
-            case "coti_transfer_native": {
+            case "transfer_native": {
                 if (!isTransferNativeCotiArgs(args)) {
-                    throw new Error("Invalid arguments for coti_transfer_native");
+                    throw new Error("Invalid arguments for transfer_native");
                 }
                 const { recipient_address, amount_wei, gas_limit } = args;
 
@@ -349,13 +458,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 };
             }
             
-            case "coti_transfer_private_erc20_token": {
+            case "transfer_private_erc20": {
                 if (!isTransferPrivateERC20TokenArgs(args)) {
-                    throw new Error("Invalid arguments for coti_transfer_private_erc20_token");
+                    throw new Error("Invalid arguments for transfer_private_erc20");
                 }
                 const { token_address, recipient_address, amount_wei, gas_limit } = args;
 
                 const results = await performTransferPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "encrypt_value": {
+                if (!isEncryptValueArgs(args)) {
+                    throw new Error("Invalid arguments for encrypt_value");
+                }
+                const { message, contract_address, function_selector } = args;
+
+                const results = await performEncryptValue(message, contract_address, function_selector);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+
+            case "decrypt_value": {
+                if (!isDecryptValueArgs(args)) {
+                    throw new Error("Invalid arguments for decrypt_value");
+                }
+                const { ciphertext } = args;
+
+                const results = await performDecryptValue(BigInt(ciphertext));
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,

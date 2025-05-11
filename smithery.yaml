@@ -6,6 +6,8 @@ startCommand:
     type: object
     required:
       - cotiMcpAesKey
+      - cotiMcpPrivateKey
+      - cotiMcpPublicKey
     properties:
       cotiMcpAesKey:
         type: string
@@ -13,6 +15,9 @@ startCommand:
       cotiMcpPrivateKey:
         type: string
         description: COTI MCP private key for signing transactions.
+      cotiMcpPublicKey:
+        type: string
+        description: COTI MCP public key that corresponds to the private key.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
@@ -21,9 +26,11 @@ startCommand:
       args: ['build/index.js'],
       env: {
         COTI_MCP_AES_KEY: config.cotiMcpAesKey,
+        COTI_MCP_PUBLIC_KEY: config.cotiMcpPublicKey,
         COTI_MCP_PRIVATE_KEY: config.cotiMcpPrivateKey
       }
     })
   exampleConfig:
     cotiMcpAesKey: YOUR_COTI_MCP_AES_KEY_HERE
+    cotiMcpPublicKey: YOUR_COTI_MCP_PUBLIC_KEY_HERE
     cotiMcpPrivateKey: YOUR_COTI_MCP_PRIVATE_KEY_HERE
