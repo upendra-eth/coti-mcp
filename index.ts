@@ -36,9 +36,9 @@ const ERC20_ABI = [
 const GET_COTI_NATIVE_BALANCE: Tool = {
     name: "coti_get_native_balance",
     description:
-        "Get the native COTI token balance of a COTI blockchain account." +
-        "This is used for checking the current balance of a COTI account." +
-        "Requires a COTI account address as input." +
+        "Get the native COTI token balance of a COTI blockchain account. " +
+        "This is used for checking the current balance of a COTI account. " +
+        "Requires a COTI account address as input. " +
         "Returns the account balance in COTI tokens.",
     inputSchema: {
         type: "object",
@@ -55,9 +55,9 @@ const GET_COTI_NATIVE_BALANCE: Tool = {
 const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
     name: "coti_get_private_erc20_token_balance",
     description:
-        "Get the balance of a private ERC20 token on the COTI blockchain." +
-        "This is used for checking the current balance of a private token for a COTI account." +
-        "Requires a COTI account address and token contract address as input." +
+        "Get the balance of a private ERC20 token on the COTI blockchain. " +
+        "This is used for checking the current balance of a private token for a COTI account. " +
+        "Requires a COTI account address and token contract address as input. " +
         "Returns the decrypted token balance.",
     inputSchema: {
         type: "object",
@@ -78,9 +78,9 @@ const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
 const TRANSFER_NATIVE_COTI: Tool = {
     name: "coti_transfer_native",
     description:
-        "Transfer native COTI tokens to another wallet." +
-        "This is used for sending COTI tokens from your wallet to another address." +
-        "Requires recipient address and amount in Wei as input." +
+        "Transfer native COTI tokens to another wallet. " +
+        "This is used for sending COTI tokens from your wallet to another address. " +
+        "Requires recipient address and amount in Wei as input. " +
         "Returns the transaction hash upon successful transfer.",
     inputSchema: {
         type: "object",
@@ -105,9 +105,9 @@ const TRANSFER_NATIVE_COTI: Tool = {
 const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
     name: "coti_transfer_private_erc20_token",
     description:
-        "Transfer private ERC20 tokens on the COTI blockchain." +
-        "This is used for sending private tokens from your wallet to another address." +
-        "Requires token contract address, recipient address, and amount as input." +
+        "Transfer private ERC20 tokens on the COTI blockchain. " +
+        "This is used for sending private tokens from your wallet to another address. " +
+        "Requires token contract address, recipient address, and amount as input. " +
         "Returns the transaction hash upon successful transfer.",
     inputSchema: {
         type: "object",
