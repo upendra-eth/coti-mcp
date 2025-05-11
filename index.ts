@@ -45,7 +45,7 @@ const GET_COTI_NATIVE_BALANCE: Tool = {
         properties: {
             account_address: {
                 type: "string",
-                description: "COTI account address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
             }
         },
         required: ["account_address"],
@@ -64,7 +64,7 @@ const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
         properties: {
             account_address: {
                 type: "string",
-                description: "COTI account address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
             },
             token_address: {
                 type: "string",
@@ -87,7 +87,7 @@ const TRANSFER_NATIVE_COTI: Tool = {
         properties: {
             recipient_address: {
                 type: "string",
-                description: "Recipient COTI address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
             },
             amount_wei: {
                 type: "string",
@@ -118,7 +118,7 @@ const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
             },
             recipient_address: {
                 type: "string",
-                description: "Recipient COTI address, e.g., coti1abcdef1234567890abcdef1234567890abcdef",
+                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
             },
             amount_wei: {
                 type: "string",
