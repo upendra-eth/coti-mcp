@@ -9,10 +9,10 @@ startCommand:
     properties:
       cotiMcpAesKey:
         type: string
-        description: COTI MCP AES key for accessing the COTI MCP API.
+        description: COTI MCP AES key for encrypting values.
       cotiMcpPrivateKey:
         type: string
-        description: COTI MCP private key for accessing the COTI MCP API.
+        description: COTI MCP private key for signing transactions.
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
