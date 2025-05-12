@@ -153,7 +153,7 @@ const ENCRYPT_VALUE: Tool = {
             },
             function_selector: {
                 type: "string",
-                description: "Function selector",
+                description: "Function selector. To get the function selector, use the keccak256 hash of the function signature. For instance, for the transfer function of an ERC20 token, the function selector is '0xa9059cbb'.",
             },
         },
         required: ["message", "contract_address", "function_selector"],
@@ -357,7 +357,9 @@ async function performTransferPrivateERC20Token(token_address: string, recipient
             txOptions.gasLimit = gas_limit;
         }
 
-        const encryptedAmount = await wallet.encryptValue(amount_wei, token_address, "transfer");
+        // Function selector for 'transfer(address,uint256)' is the first 4 bytes of its keccak256 hash
+        const transferFunctionSelector = "0xa9059cbb"; // keccak256("transfer(address,uint256)")
+        const encryptedAmount = await wallet.encryptValue(amount_wei, token_address, transferFunctionSelector);
         
         const tx = await tokenContract.transfer(recipient_address, encryptedAmount, txOptions);
         
