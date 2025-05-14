@@ -31,6 +31,23 @@ const ERC20_ABI = [
     outputs: [{ name: "", type: "string" }],
     type: "function",
   },
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" }
+    ],
+    name: "allowance",
+    outputs: [{
+      components: [
+        { name: "ciphertext", type: "uint256" },
+        { name: "ownerCiphertext", type: "uint256" },
+        { name: "spenderCiphertext", type: "uint256" }
+      ],
+      type: "tuple"
+    }],
+    stateMutability: "view",
+    type: "function"
+  },
 ];
 
 const ERC721_ABI = [
@@ -254,6 +271,33 @@ const GET_PRIVATE_ERC721_TOKEN_URI: Tool = {
     },
 };
 
+const GET_PRIVATE_ERC20_TOKEN_ALLOWANCE: Tool = {
+    name: "get_private_erc20_allowance",
+    description:
+        "Get the allowance of a private ERC20 token on the COTI blockchain. " +
+        "This is used for checking how much a spender is allowed to spend on behalf of an owner. " +
+        "Requires token contract address, owner address, and spender address as input. " +
+        "Returns the decrypted allowance amount.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC20 token contract address on COTI blockchain",
+            },
+            owner_address: {
+                type: "string",
+                description: "Owner address that has granted the allowance",
+            },
+            spender_address: {
+                type: "string",
+                description: "Spender address that can spend the tokens",
+            },
+        },
+        required: ["token_address", "owner_address", "spender_address"],
+    },
+};
+
 const ENCRYPT_VALUE: Tool = {
     name: "encrypt_value",
     description:
@@ -398,6 +442,19 @@ function isGetPrivateERC721TokenURIArgs(args: unknown): args is { token_address:
         typeof (args as { token_address: string }).token_address === "string" &&
         "token_id" in args &&
         typeof (args as { token_id: string }).token_id === "string"
+    );
+}
+
+function isGetPrivateERC20TokenAllowanceArgs(args: unknown): args is { token_address: string, owner_address: string, spender_address: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string" &&
+        "owner_address" in args &&
+        typeof (args as { owner_address: string }).owner_address === "string" &&
+        "spender_address" in args &&
+        typeof (args as { spender_address: string }).spender_address === "string"
     );
 }
 
@@ -612,6 +669,45 @@ async function performGetPrivateERC721TokenURI(token_address: string, token_id: 
     }
 }
 
+async function performGetPrivateERC20TokenAllowance(token_address: string, owner_address: string, spender_address: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
+        
+        const [decimalsResult, symbolResult] = await Promise.all([
+            tokenContract.decimals(),
+            tokenContract.symbol()
+        ]);
+        
+        const allowanceData = await tokenContract.allowance(owner_address, spender_address);
+        
+        // The allowance method returns a tuple with ciphertext, ownerCiphertext, and spenderCiphertext
+        // We need to decrypt the main ciphertext to get the allowance amount
+        let decryptedAllowance;
+        let allowanceDetails = '';
+        
+        if (typeof allowanceData === 'object' && 'ciphertext' in allowanceData) {
+            decryptedAllowance = await wallet.decryptValue(allowanceData.ciphertext);
+            allowanceDetails = `\nAllowance Ciphertext: ${allowanceData.ciphertext}\nOwner Ciphertext: ${allowanceData.ownerCiphertext}\nSpender Ciphertext: ${allowanceData.spenderCiphertext}`;
+        } else {
+            // If the result is not a tuple, it might be directly the encrypted allowance
+            decryptedAllowance = await wallet.decryptValue(allowanceData);
+            allowanceDetails = `\nAllowance Data: ${allowanceData}`;
+        }
+        
+        const formattedAllowance = ethers.formatUnits(decryptedAllowance, decimalsResult);
+        
+        return `Token: ${symbolResult}\nOwner: ${owner_address}\nSpender: ${spender_address}\nDecrypted Allowance: ${formattedAllowance}\nDecimals: ${decimalsResult}${allowanceDetails}`;
+    } catch (error) {
+        console.error('Error getting private ERC20 token allowance:', error);
+        throw new Error(`Failed to get private ERC20 token allowance: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
         GET_COTI_NATIVE_BALANCE, 
@@ -620,6 +716,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         TRANSFER_PRIVATE_ERC20_TOKEN, 
         TRANSFER_PRIVATE_ERC721_TOKEN,
         GET_PRIVATE_ERC721_TOKEN_URI,
+        GET_PRIVATE_ERC20_TOKEN_ALLOWANCE,
         ENCRYPT_VALUE, 
         DECRYPT_VALUE
     ],
@@ -738,6 +835,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { token_address, token_id } = args;
 
                 const results = await performGetPrivateERC721TokenURI(token_address, token_id);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "get_private_erc20_allowance": {
+                if (!isGetPrivateERC20TokenAllowanceArgs(args)) {
+                    throw new Error("Invalid arguments for get_private_erc20_allowance");
+                }
+                const { token_address, owner_address, spender_address } = args;
+
+                const results = await performGetPrivateERC20TokenAllowance(
+                    token_address, 
+                    owner_address, 
+                    spender_address
+                );
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
