@@ -1,5 +1,7 @@
 # <img src="https://coti.io/favicon.ico" height="32"> COTI Blockchain MCP
 
+[![smithery badge](https://smithery.ai/badge/@davibauer/coti-mcp)](https://smithery.ai/server/@davibauer/coti-mcp)
+
 The COTI Blockchain MCP integrates COTI blockchain access into Claude AI and other apps. This MCP allows you to:
 - Check native COTI token balances on the COTI blockchain using the official @coti-io/coti-ethers library
 - View formatted balance information in a user-friendly format
