@@ -571,15 +571,13 @@ async function performTransferPrivateERC20Token(token_address: string, recipient
             txOptions.gasLimit = gas_limit;
         }
 
-        // Function selector for 'transfer(address,uint256)' is the first 4 bytes of its keccak256 hash
-        const transferFunctionSelector = "0xa9059cbb"; // keccak256("transfer(address,uint256)")
-        const encryptedAmount = await wallet.encryptValue(amount_wei, token_address, transferFunctionSelector);
+        const encryptedAmount = await wallet.encryptValue(amount_wei, token_address, tokenContract.transfer.fragment.selector);
         
         const tx = await tokenContract.transfer(recipient_address, encryptedAmount, txOptions);
         
         const receipt = await tx.wait();
         
-        return `Private Token Transfer Successful!\nToken: ${symbolResult}\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}`;
+        return `Private Token Transfer Successful!\nToken: ${symbolResult}\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}\nTransfer Function Selector: ${tokenContract.transfer.fragment.selector}`;
     } catch (error) {
         console.error('Error transferring private ERC20 tokens:', error);
         throw new Error(`Failed to transfer private ERC20 tokens: ${error instanceof Error ? error.message : String(error)}`);
