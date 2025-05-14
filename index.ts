@@ -593,7 +593,10 @@ async function performEncryptValue(message: bigint | number | string, contractAd
         
         const encryptedMessage = await wallet.encryptValue(message, contractAddress, functionSelector);
         
-        return `Encrypted Message: ${encryptedMessage}`;
+        const encryptedMessageString = typeof encryptedMessage === 'object' ? 
+            encryptedMessage.toString() : String(encryptedMessage);
+        
+        return `Encrypted Message: ${encryptedMessageString}`;
     } catch (error) {
         console.error('Error encrypting message:', error);
         throw new Error(`Failed to encrypt message: ${error instanceof Error ? error.message : String(error)}`);
