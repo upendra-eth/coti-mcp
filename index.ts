@@ -33,6 +33,69 @@ const ERC20_ABI = [
   },
 ];
 
+const ERC721_ABI = [
+  {
+    constant: false,
+    inputs: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "tokenId", type: "uint256" }
+    ],
+    name: "transferFrom",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "tokenId", type: "uint256" }
+    ],
+    name: "safeTransferFrom",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "ownerOf",
+    outputs: [{ name: "", type: "address" }],
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [{ name: "owner", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "string" }],
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "tokenURI",
+    outputs: [{ name: "", type: "string" }],
+    type: "function"
+  }
+];
+
 const GET_COTI_NATIVE_BALANCE: Tool = {
     name: "get_native_balance",
     description:
@@ -130,6 +193,64 @@ const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
             },
         },
         required: ["token_address", "recipient_address", "amount_wei"],
+    },
+};
+
+const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
+    name: "transfer_private_erc721",
+    description:
+        "Transfer a private ERC721 NFT token on the COTI blockchain. " +
+        "This is used for sending a private NFT from your wallet to another address. " +
+        "Requires token contract address, recipient address, and token ID as input. " +
+        "Returns the transaction hash upon successful transfer.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC721 token contract address on COTI blockchain",
+            },
+            recipient_address: {
+                type: "string",
+                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
+            },
+            token_id: {
+                type: "string",
+                description: "ID of the NFT token to transfer",
+            },
+            use_safe_transfer: {
+                type: "boolean",
+                description: "Optional, whether to use safeTransferFrom instead of transferFrom. Default is false.",
+            },
+            gas_limit: {
+                type: "string",
+                description: "Optional gas limit for the transaction",
+            },
+        },
+        required: ["token_address", "recipient_address", "token_id"],
+    },
+};
+
+const GET_PRIVATE_ERC721_TOKEN_URI: Tool = {
+    name: "get_private_erc721_token_uri",
+    description:
+        "Get the tokenURI for a private ERC721 NFT token on the COTI blockchain. " +
+        "This is used for retrieving the metadata URI of a private NFT. " +
+        "Requires token contract address and token ID as input. " +
+        "Returns the decrypted tokenURI.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC721 token contract address on COTI blockchain",
+            },
+            token_id: {
+                type: "string",
+                description: "ID of the NFT token to get the URI for",
+            },
+        },
+        required: ["token_address", "token_id"],
     },
 };
 
@@ -251,6 +372,32 @@ function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_address
         "amount_wei" in args &&
         typeof (args as { amount_wei: string }).amount_wei === "string" &&
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
+    );
+}
+
+function isTransferPrivateERC721TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, token_id: string, use_safe_transfer?: boolean, gas_limit?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string" &&
+        "recipient_address" in args &&
+        typeof (args as { recipient_address: string }).recipient_address === "string" &&
+        "token_id" in args &&
+        typeof (args as { token_id: string }).token_id === "string" &&
+        (!("use_safe_transfer" in args) || typeof (args as { use_safe_transfer: boolean }).use_safe_transfer === "boolean") &&
+        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
+    );
+}
+
+function isGetPrivateERC721TokenURIArgs(args: unknown): args is { token_address: string, token_id: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string" &&
+        "token_id" in args &&
+        typeof (args as { token_id: string }).token_id === "string"
     );
 }
 
@@ -391,7 +538,6 @@ async function performDecryptValue(ciphertext: bigint) {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
         const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
         
-        
         const decryptedMessage = await wallet.decryptValue(ciphertext);
         
         return `Decrypted Message: ${decryptedMessage}`;
@@ -401,12 +547,79 @@ async function performDecryptValue(ciphertext: bigint) {
     }
 }
 
+async function performTransferPrivateERC721Token(token_address: string, recipient_address: string, token_id: string, use_safe_transfer: boolean = false, gas_limit?: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
+        
+        const [symbolResult, nameResult] = await Promise.all([
+            tokenContract.symbol(),
+            tokenContract.name()
+        ]);
+        
+        const txOptions: any = {};
+        if (gas_limit) {
+            txOptions.gasLimit = gas_limit;
+        }
+
+        let tx;
+        if (use_safe_transfer) {
+            tx = await tokenContract.safeTransferFrom(wallet.address, recipient_address, token_id, txOptions);
+        } else {
+            tx = await tokenContract.transferFrom(wallet.address, recipient_address, token_id, txOptions);
+        }
+        
+        const receipt = await tx.wait();
+        
+        return `Private NFT Transfer Successful!\nToken: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nTransaction Hash: ${receipt?.hash}\nTransfer Method: ${use_safe_transfer ? 'safeTransferFrom' : 'transferFrom'}\nRecipient: ${recipient_address}`;
+    } catch (error) {
+        console.error('Error transferring private ERC721 token:', error);
+        throw new Error(`Failed to transfer private ERC721 token: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performGetPrivateERC721TokenURI(token_address: string, token_id: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
+        
+        const [symbolResult, nameResult] = await Promise.all([
+            tokenContract.symbol(),
+            tokenContract.name()
+        ]);
+        
+        const encryptedTokenURI = await tokenContract.tokenURI(token_id);
+        
+        let tokenURI;
+        try {
+            tokenURI = await wallet.decryptValue(encryptedTokenURI);
+        } catch (decryptError) {
+            tokenURI = encryptedTokenURI;
+        }
+        
+        return `Token: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nToken URI: ${tokenURI}`;
+    } catch (error) {
+        console.error('Error getting private ERC721 token URI:', error);
+        throw new Error(`Failed to get private ERC721 token URI: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
         GET_COTI_NATIVE_BALANCE, 
         GET_PRIVATE_ERC20_TOKEN_BALANCE, 
         TRANSFER_NATIVE_COTI, 
         TRANSFER_PRIVATE_ERC20_TOKEN, 
+        TRANSFER_PRIVATE_ERC721_TOKEN,
+        GET_PRIVATE_ERC721_TOKEN_URI,
         ENCRYPT_VALUE, 
         DECRYPT_VALUE
     ],
@@ -493,6 +706,38 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { ciphertext } = args;
 
                 const results = await performDecryptValue(BigInt(ciphertext));
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "transfer_private_erc721": {
+                if (!isTransferPrivateERC721TokenArgs(args)) {
+                    throw new Error("Invalid arguments for transfer_private_erc721");
+                }
+                const { token_address, recipient_address, token_id, use_safe_transfer, gas_limit } = args;
+
+                const results = await performTransferPrivateERC721Token(
+                    token_address, 
+                    recipient_address, 
+                    token_id, 
+                    use_safe_transfer || false, 
+                    gas_limit
+                );
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "get_private_erc721_token_uri": {
+                if (!isGetPrivateERC721TokenURIArgs(args)) {
+                    throw new Error("Invalid arguments for get_private_erc721_token_uri");
+                }
+                const { token_address, token_id } = args;
+
+                const results = await performGetPrivateERC721TokenURI(token_address, token_id);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
