@@ -8,8 +8,43 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
+import { buildInputText } from '@coti-io/coti-sdk-typescript';
 
 const ERC20_ABI = [
+  // Basic ERC20 functions
+  {
+    constant: true,
+    inputs: [],
+    name: "name",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "symbol",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  
+  // Balance functions
   {
     constant: true,
     inputs: [{ name: "_owner", type: "address" }],
@@ -17,20 +52,8 @@ const ERC20_ABI = [
     outputs: [{ name: "balance", type: "uint256" }],
     type: "function",
   },
-  {
-    constant: true,
-    inputs: [],
-    name: "decimals",
-    outputs: [{ name: "", type: "uint8" }],
-    type: "function",
-  },
-  {
-    constant: true,
-    inputs: [],
-    name: "symbol",
-    outputs: [{ name: "", type: "string" }],
-    type: "function",
-  },
+  
+  // Allowance functions
   {
     inputs: [
       { name: "owner", type: "address" },
@@ -48,16 +71,115 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+  
+  // Approve functions
   {
-    constant: false,
     inputs: [
-      { name: "_to", type: "address" },
-      { name: "_value", type: "uint256" }
+      { name: "spender", type: "address" },
+      { 
+        components: [
+          { name: "ciphertext", type: "uint256" },
+          { name: "signature", type: "bytes" }
+        ],
+        name: "value",
+        type: "tuple"
+      }
     ],
-    name: "transfer",
+    name: "approve",
     outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
     type: "function"
   },
+  
+  // Transfer functions
+  {
+    inputs: [
+      { internalType: "address", name: "to", type: "address" },
+      { 
+        components: [
+          { internalType: "ctUint64", name: "ciphertext", type: "uint256" },
+          { internalType: "bytes", name: "signature", type: "bytes" }
+        ],
+        internalType: "struct itUint64",
+        name: "value",
+        type: "tuple"
+      }
+    ],
+    name: "transfer",
+    outputs: [{ internalType: "gtBool", name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+// {
+//     inputs: [
+//       {
+//         internalType: "address",
+//         name: "to",
+//         type: "address"
+//       },
+//       {
+//         internalType: "gtUint64",
+//         name: "value",
+//         type: "uint256"
+//       }
+//     ],
+//     name: "transfer",
+//     outputs: [
+//       {
+//         internalType: "gtBool",
+//         name: "",
+//         type: "uint256"
+//       }
+//     ],
+//     stateMutability: "nonpayable",
+//     type: "function"
+//   },
+  
+  // TransferFrom functions
+  {
+    inputs: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { 
+        components: [
+          { name: "ciphertext", type: "uint256" },
+          { name: "signature", type: "bytes" }
+        ],
+        name: "value",
+        type: "tuple"
+      }
+    ],
+    name: "transferFrom",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  
+  // Additional functions
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "accountEncryptionAddress",
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "isSpender", type: "bool" }
+    ],
+    name: "reencryptAllowance",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [{ name: "offBoardAddress", type: "address" }],
+    name: "setAccountEncryptionAddress",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function"
+  }
 ];
 
 const ERC721_ABI = [
@@ -561,7 +683,7 @@ async function performTransferPrivateERC20Token(token_address: string, recipient
         const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
         
         wallet.setAesKey(COTI_MCP_AES_KEY);
-        
+
         const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
         
         const symbolResult = await tokenContract.symbol();
@@ -571,13 +693,16 @@ async function performTransferPrivateERC20Token(token_address: string, recipient
             txOptions.gasLimit = gas_limit;
         }
 
-        const encryptedAmount = await wallet.encryptValue(amount_wei, token_address, tokenContract.transfer.fragment.selector);
-        
-        const tx = await tokenContract.transfer(recipient_address, encryptedAmount, txOptions);
+        const transferSelector = tokenContract.transfer.fragment.selector;
+
+        const encryptedInputText = buildInputText(BigInt(amount_wei), 
+        { wallet: wallet, userKey: COTI_MCP_AES_KEY }, token_address, transferSelector);
+
+        const tx = await tokenContract.transfer(recipient_address, encryptedInputText, txOptions);
         
         const receipt = await tx.wait();
-        
-        return `Private Token Transfer Successful!\nToken: ${symbolResult}\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}\nTransfer Function Selector: ${tokenContract.transfer.fragment.selector}`;
+
+        return `Private Token Transfer Successful!\nToken: ${symbolResult}\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}\nTransfer Function Selector: ${transferSelector}`;
     } catch (error) {
         console.error('Error transferring private ERC20 tokens:', error);
         throw new Error(`Failed to transfer private ERC20 tokens: ${error instanceof Error ? error.message : String(error)}`);

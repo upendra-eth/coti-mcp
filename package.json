@@ -1,6 +1,6 @@
 {
     "name": "@davibaue/coti-mcp",
-    "version": "0.0.13",
+    "version": "0.0.15",
     "description": "MCP server for COTI blockchain",
     "license": "MIT",
     "author": "Davi Bauer",
@@ -18,8 +18,9 @@
         "watch": "tsc --watch"
     },
     "dependencies": {
-      "@modelcontextprotocol/sdk": "1.6.1",
-      "@coti-io/coti-ethers": "^1.0.0"
+        "@coti-io/coti-ethers": "^1.0.0",
+        "@coti-io/coti-sdk-typescript": "^1.0.4",
+        "@modelcontextprotocol/sdk": "1.6.1"
     },
     "devDependencies": {
         "@types/node": "^22",
