@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -8,7 +7,7 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { buildInputText } from '@coti-io/coti-sdk-typescript';
+import { buildInputText, ctString, decryptString, itString } from '@coti-io/coti-sdk-typescript';
 
 const ERC20_ABI = [
   // Basic ERC20 functions
@@ -110,30 +109,6 @@ const ERC20_ABI = [
     stateMutability: "nonpayable",
     type: "function"
   },
-// {
-//     inputs: [
-//       {
-//         internalType: "address",
-//         name: "to",
-//         type: "address"
-//       },
-//       {
-//         internalType: "gtUint64",
-//         name: "value",
-//         type: "uint256"
-//       }
-//     ],
-//     name: "transfer",
-//     outputs: [
-//       {
-//         internalType: "gtBool",
-//         name: "",
-//         type: "uint256"
-//       }
-//     ],
-//     stateMutability: "nonpayable",
-//     type: "function"
-//   },
   
   // TransferFrom functions
   {
@@ -237,12 +212,31 @@ const ERC721_ABI = [
     type: "function"
   },
   {
-    constant: true,
-    inputs: [{ name: "tokenId", type: "uint256" }],
+    inputs: [
+        {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256"
+        }
+    ],
     name: "tokenURI",
-    outputs: [{ name: "", type: "string" }],
+    outputs: [
+        {
+            components: [
+                {
+                    internalType: "ctUint64[]",
+                    name: "value",
+                    type: "uint256[]"
+                }
+            ],
+            internalType: "struct ctString",
+            name: "",
+            type: "tuple"
+        }
+    ],
+    stateMutability: "view",
     type: "function"
-  }
+}
 ];
 
 const GET_COTI_NATIVE_BALANCE: Tool = {
@@ -789,16 +783,16 @@ async function performGetPrivateERC721TokenURI(token_address: string, token_id: 
             tokenContract.name()
         ]);
         
-        const encryptedTokenURI = await tokenContract.tokenURI(token_id);
-        
+        const encryptedTokenURI = await tokenContract.tokenURI(BigInt(token_id));
+
         let tokenURI;
         try {
             tokenURI = await wallet.decryptValue(encryptedTokenURI);
         } catch (decryptError) {
-            tokenURI = encryptedTokenURI;
+            tokenURI = decryptError;
         }
         
-        return `Token: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nToken URI: ${tokenURI}`;
+        return `Token: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nDecrypted Token URI: ${tokenURI}`;
     } catch (error) {
         console.error('Error getting private ERC721 token URI:', error);
         throw new Error(`Failed to get private ERC721 token URI: ${error instanceof Error ? error.message : String(error)}`);
