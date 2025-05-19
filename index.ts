@@ -7,7 +7,7 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { buildInputText, ctString, decryptString, itString } from '@coti-io/coti-sdk-typescript';
+import { buildInputText, buildStringInputText } from '@coti-io/coti-sdk-typescript';
 
 const ERC20_ABI = [
   // Basic ERC20 functions
@@ -253,7 +253,41 @@ const ERC721_ABI = [
     ],
     stateMutability: "view",
     type: "function"
-}
+},
+// mint function
+{
+    inputs: [
+        {
+            components: [
+                {
+                    components: [
+                        {
+                            internalType: "ctUint64[]",
+                            name: "value",
+                            type: "uint256[]"
+                        }
+                    ],
+                    internalType: "struct ctString",
+                    name: "ciphertext",
+                    type: "tuple"
+                },
+                {
+                    internalType: "bytes[]",
+                    name: "signature",
+                    type: "bytes[]"
+                }
+            ],
+            internalType: "struct itString",
+            name: "itTokenURI",
+            type: "tuple"
+        }
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+},
+
 ];
 
 const GET_COTI_NATIVE_BALANCE: Tool = {
@@ -437,6 +471,32 @@ const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
             },
         },
         required: ["name", "symbol"],
+    },
+};
+
+const MINT_PRIVATE_ERC721_TOKEN: Tool = {
+    name: "mint_private_erc721_token",
+    description:
+        "Mint a new private ERC721 NFT token on the COTI blockchain. " +
+        "This creates a new NFT in the specified collection with the provided token URI. " +
+        "Returns the transaction hash and token ID upon successful minting.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC721 token contract address on COTI blockchain",
+            },
+            token_uri: {
+                type: "string",
+                description: "URI for the token metadata (can be IPFS URI or any other URI)",
+            },
+            gas_limit: {
+                type: "string",
+                description: "Optional gas limit for the minting transaction",
+            },
+        },
+        required: ["token_address", "token_uri"],
     },
 };
 
@@ -624,6 +684,18 @@ function isGetPrivateERC20TokenAllowanceArgs(args: unknown): args is { token_add
         typeof (args as { owner_address: string }).owner_address === "string" &&
         "spender_address" in args &&
         typeof (args as { spender_address: string }).spender_address === "string"
+    );
+}
+
+function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, token_uri: string, gas_limit: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string" &&
+        "token_uri" in args &&
+        typeof (args as { token_uri: string }).token_uri === "string" &&
+        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
     );
 }
 
@@ -886,6 +958,33 @@ async function performGetPrivateERC721TokenURI(token_address: string, token_id: 
     }
 }
 
+async function performMintPrivateERC721Token(token_address: string, token_uri: string, gas_limit: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
+        
+        const mintSelector = tokenContract.mint.fragment.selector;
+        
+        const encryptedInputText = buildStringInputText(token_uri, 
+        { wallet: wallet, userKey: COTI_MCP_AES_KEY }, token_address, mintSelector);
+        
+        const mintTx = await tokenContract.mint(encryptedInputText, {
+            gasLimit: gas_limit
+        });
+        
+        const receipt = await mintTx.wait();
+        
+        return `Private ERC721 Token Minted Successfully!\nTransaction Hash: ${receipt ? receipt.hash : 'unknown'}\nToken URI: ${token_uri}`;
+    } catch (error) {
+        console.error('Error minting private ERC721 token:', error);
+        throw new Error(`Failed to mint private ERC721 token: ${error instanceof Error ? error.message : String(error)},`);
+    }
+}
+
 async function performGetPrivateERC20TokenAllowance(token_address: string, owner_address: string, spender_address: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -935,6 +1034,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GET_PRIVATE_ERC721_TOKEN_URI,
         GET_PRIVATE_ERC20_TOKEN_ALLOWANCE,
         DEPLOY_PRIVATE_ERC721_CONTRACT,
+        MINT_PRIVATE_ERC721_TOKEN,
         ENCRYPT_VALUE, 
         DECRYPT_VALUE
     ],
@@ -1083,6 +1183,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { name, symbol, gas_limit } = args;
 
                 const results = await performDeployPrivateERC721Contract(name, symbol, gas_limit);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "mint_private_erc721_token": {
+                if (!isMintPrivateERC721TokenArgs(args)) {
+                    throw new Error("Invalid arguments for mint_private_erc721_token");
+                }
+                const { token_address, token_uri, gas_limit } = args;
+
+                const results = await performMintPrivateERC721Token(token_address, token_uri, gas_limit);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
