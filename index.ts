@@ -259,6 +259,21 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Decimals
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
 ];
 
 const ERC721_ABI = [
@@ -651,6 +666,25 @@ const GET_PRIVATE_ERC20_TOTAL_SUPPLY: Tool = {
     },
 };
 
+const GET_PRIVATE_ERC20_DECIMALS: Tool = {
+    name: "get_private_erc20_decimals",
+    description:
+        "Get the number of decimals for a private ERC20 token on the COTI blockchain. " +
+        "This is used for checking the number of decimals in this token. " +
+        "Requires token contract address as input. " +
+        "Returns the number of decimals in this contract.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC20 token contract address on COTI blockchain",
+            },
+        },
+        required: ["token_address"],
+    },
+};
+
 const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
     name: "deploy_private_erc721_contract",
     description:
@@ -1004,6 +1038,15 @@ function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { token_addre
 }
 
 function isGetPrivateERC20TotalSupplyArgs(args: unknown): args is { token_address: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string"
+    );
+}
+
+function isGetPrivateERC20DecimalsArgs(args: unknown): args is { token_address: string } {
     return (
         typeof args === "object" &&
         args !== null &&
@@ -1467,6 +1510,27 @@ async function performGetPrivateERC20TotalSupply(token_address: string) {
     }
 }
 
+async function performGetPrivateERC20Decimals(token_address: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const currentAccountKeys = getCurrentAccountKeys();
+        
+        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
+        wallet.setAesKey(currentAccountKeys.aesKey);
+        
+        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
+        
+        const decimals = await tokenContract.decimals();
+        const name = await tokenContract.name();
+        const symbol = await tokenContract.symbol();
+        
+        return `Collection: ${name} (${symbol})\nDecimals: ${decimals}\nToken Address: ${token_address}`;
+    } catch (error) {
+        console.error('Error getting private ERC20 decimals:', error);
+        throw new Error(`Failed to get private ERC20 decimals: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 async function performMintPrivateERC721Token(token_address: string, to_address: string, token_uri: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
@@ -1558,6 +1622,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GET_PRIVATE_ERC721_TOKEN_OWNER,
         GET_PRIVATE_ERC721_TOTAL_SUPPLY,
         GET_PRIVATE_ERC20_TOTAL_SUPPLY,
+        GET_PRIVATE_ERC20_DECIMALS,
         DEPLOY_PRIVATE_ERC721_CONTRACT,
         DEPLOY_PRIVATE_ERC20_CONTRACT,
         MINT_PRIVATE_ERC721_TOKEN,
@@ -1717,6 +1782,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { token_address } = args;
 
                 const results = await performGetPrivateERC20TotalSupply(token_address);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "get_private_erc20_decimals": {
+                if (!isGetPrivateERC20DecimalsArgs(args)) {
+                    throw new Error("Invalid arguments for get_private_erc20_decimals");
+                }
+                const { token_address } = args;
+
+                const results = await performGetPrivateERC20Decimals(token_address);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
