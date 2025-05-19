@@ -244,6 +244,21 @@ const ERC20_ABI = [
     stateMutability: "nonpayable",
     type: "function"
   },
+
+  // Total Supply
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
 ];
 
 const ERC721_ABI = [
@@ -617,6 +632,25 @@ const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
     },
 };
 
+const GET_PRIVATE_ERC20_TOTAL_SUPPLY: Tool = {
+    name: "get_private_erc20_total_supply",
+    description:
+        "Get the total supply of tokens for a private ERC20 token on the COTI blockchain. " +
+        "This is used for checking how many tokens have been minted in this token. " +
+        "Requires token contract address as input. " +
+        "Returns the total number of tokens in this contract.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC20 token contract address on COTI blockchain",
+            },
+        },
+        required: ["token_address"],
+    },
+};
+
 const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
     name: "deploy_private_erc721_contract",
     description:
@@ -961,6 +995,15 @@ function isGetPrivateERC721TokenOwnerArgs(args: unknown): args is { token_addres
 }
 
 function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { token_address: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string"
+    );
+}
+
+function isGetPrivateERC20TotalSupplyArgs(args: unknown): args is { token_address: string } {
     return (
         typeof args === "object" &&
         args !== null &&
@@ -1400,6 +1443,30 @@ async function performGetPrivateERC721TotalSupply(token_address: string) {
     }
 }
 
+async function performGetPrivateERC20TotalSupply(token_address: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const currentAccountKeys = getCurrentAccountKeys();
+        
+        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
+        wallet.setAesKey(currentAccountKeys.aesKey);
+        
+        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
+        
+        const name = await tokenContract.name();
+        const symbol = await tokenContract.symbol();
+        const decimals = await tokenContract.decimals();
+        
+        const totalSupply = await tokenContract.totalSupply();
+        const formattedTotalSupply = ethers.formatUnits(totalSupply, decimals);
+        
+        return `Collection: ${name} (${symbol})\nTotal Supply (in Wei): ${totalSupply}\nTotal Supply (formatted): ${formattedTotalSupply} (${decimals} decimals)\nToken Address: ${token_address}`;
+    } catch (error) {
+        console.error('Error getting private ERC20 total supply:', error);
+        throw new Error(`Failed to get private ERC20 total supply: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 async function performMintPrivateERC721Token(token_address: string, to_address: string, token_uri: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
@@ -1490,6 +1557,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GET_PRIVATE_ERC721_TOKEN_URI,
         GET_PRIVATE_ERC721_TOKEN_OWNER,
         GET_PRIVATE_ERC721_TOTAL_SUPPLY,
+        GET_PRIVATE_ERC20_TOTAL_SUPPLY,
         DEPLOY_PRIVATE_ERC721_CONTRACT,
         DEPLOY_PRIVATE_ERC20_CONTRACT,
         MINT_PRIVATE_ERC721_TOKEN,
@@ -1636,6 +1704,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { token_address } = args;
 
                 const results = await performGetPrivateERC721TotalSupply(token_address);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+
+            case "get_private_erc20_total_supply": {
+                if (!isGetPrivateERC20TotalSupplyArgs(args)) {
+                    throw new Error("Invalid arguments for get_private_erc20_total_supply");
+                }
+                const { token_address } = args;
+
+                const results = await performGetPrivateERC20TotalSupply(token_address);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
