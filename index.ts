@@ -7,10 +7,28 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { buildInputText, buildStringInputText } from '@coti-io/coti-sdk-typescript';
+import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
 
 const ERC20_ABI = [
-  // Basic ERC20 functions
+  // Constructor
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "name_",
+        type: "string"
+      },
+      {
+        internalType: "string",
+        name: "symbol_",
+        type: "string"
+      }
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor"
+  },
+  
+  // Name
   {
     constant: true,
     inputs: [],
@@ -19,6 +37,8 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Symbol
   {
     constant: true,
     inputs: [],
@@ -27,6 +47,8 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Decimals
   {
     constant: true,
     inputs: [],
@@ -44,12 +66,32 @@ const ERC20_ABI = [
   },
   
   // Balance functions
-  {
-    constant: true,
-    inputs: [{ name: "_owner", type: "address" }],
+//   {
+//     constant: true,
+//     inputs: [{ name: "_owner", type: "address" }],
+//     name: "balanceOf",
+//     outputs: [{ name: "balance", type: "uint256" }],
+//     type: "function",
+//   },
+
+{
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address"
+      }
+    ],
     name: "balanceOf",
-    outputs: [{ name: "balance", type: "uint256" }],
-    type: "function",
+    outputs: [
+      {
+        internalType: "ctUint64",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
   },
   
   // Allowance functions
@@ -130,7 +172,7 @@ const ERC20_ABI = [
     type: "function"
   },
   
-  // Additional functions
+  // Account Encryption Address
   {
     inputs: [{ name: "account", type: "address" }],
     name: "accountEncryptionAddress",
@@ -138,6 +180,8 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Reencrypt Allowance
   {
     inputs: [
       { name: "account", type: "address" },
@@ -148,13 +192,35 @@ const ERC20_ABI = [
     stateMutability: "nonpayable",
     type: "function"
   },
+
+  // Set Account Encryption Address
   {
     inputs: [{ name: "offBoardAddress", type: "address" }],
     name: "setAccountEncryptionAddress",
     outputs: [{ name: "", type: "bool" }],
     stateMutability: "nonpayable",
     type: "function"
-  }
+  },
+
+  // Mint
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address"
+      },
+      {
+        internalType: "uint64",
+        name: "amount",
+        type: "uint64"
+      }
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
 ];
 
 const ERC721_ABI = [
@@ -474,6 +540,32 @@ const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
     },
 };
 
+const DEPLOY_PRIVATE_ERC20_CONTRACT: Tool = {
+    name: "deploy_private_erc20_contract",
+    description:
+        "Deploy a new standard private ERC20 token contract on the COTI blockchain. " +
+        "This creates a new private token with the specified name, symbol, and decimals. " +
+        "Returns the deployed contract address upon successful deployment.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            name: {
+                type: "string",
+                description: "Name of the token",
+            },
+            symbol: {
+                type: "string",
+                description: "Symbol of the token (typically 3-5 characters)",
+            },
+            gas_limit: {
+                type: "string",
+                description: "Optional gas limit for the deployment transaction",
+            },
+        },
+        required: ["name", "symbol"],
+    },
+};
+
 const MINT_PRIVATE_ERC721_TOKEN: Tool = {
     name: "mint_private_erc721_token",
     description:
@@ -497,6 +589,36 @@ const MINT_PRIVATE_ERC721_TOKEN: Tool = {
             },
         },
         required: ["token_address", "token_uri"],
+    },
+};
+
+const MINT_PRIVATE_ERC20_TOKEN: Tool = {
+    name: "mint_private_erc20_token",
+    description:
+        "Mint additional private ERC20 tokens on the COTI blockchain. " +
+        "This adds new tokens to the specified recipient address. " +
+        "Returns the transaction hash upon successful minting.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            token_address: {
+                type: "string",
+                description: "ERC20 token contract address on COTI blockchain",
+            },
+            recipient_address: {
+                type: "string",
+                description: "Address to receive the minted tokens",
+            },
+            amount_wei: {
+                type: "string",
+                description: "Amount of tokens to mint in wei (smallest unit)",
+            },
+            gas_limit: {
+                type: "string",
+                description: "Optional gas limit for the minting transaction",
+            },
+        },
+        required: ["token_address", "recipient_address", "amount_wei"],
     },
 };
 
@@ -687,7 +809,7 @@ function isGetPrivateERC20TokenAllowanceArgs(args: unknown): args is { token_add
     );
 }
 
-function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, token_uri: string, gas_limit: string } {
+function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, token_uri: string, gas_limit?: string } {
     return (
         typeof args === "object" &&
         args !== null &&
@@ -695,6 +817,20 @@ function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: s
         typeof (args as { token_address: string }).token_address === "string" &&
         "token_uri" in args &&
         typeof (args as { token_uri: string }).token_uri === "string" &&
+        (!("gas_limit" in args) || ("gas_limit" in args && typeof (args as { gas_limit: string }).gas_limit === "string"))
+    );
+}
+
+function isMintPrivateERC20TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "token_address" in args &&
+        typeof (args as { token_address: string }).token_address === "string" &&
+        "recipient_address" in args &&
+        typeof (args as { recipient_address: string }).recipient_address === "string" &&
+        "amount_wei" in args &&
+        typeof (args as { amount_wei: string }).amount_wei === "string" &&
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
     );
 }
@@ -733,6 +869,18 @@ function isDeployPrivateERC721ContractArgs(args: unknown): args is { name: strin
     );
 }
 
+function isDeployPrivateERC20ContractArgs(args: unknown): args is { name: string, symbol: string, gas_limit?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "name" in args &&
+        typeof (args as { name: string }).name === "string" &&
+        "symbol" in args &&
+        typeof (args as { symbol: string }).symbol === "string" &&
+        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
+    );
+}
+
 async function performGetCotiBalance(account_address: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -748,6 +896,15 @@ async function performGetCotiBalance(account_address: string) {
     }
 }
 
+export const decryptBalance = (balance: ctUint, AESkey: string) => {
+    try {
+      return decryptUint(balance, AESkey);
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  };
+
 async function performGetPrivateERC20TokenBalance(account_address: string, token_address: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -757,16 +914,23 @@ async function performGetPrivateERC20TokenBalance(account_address: string, token
         
         const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
         
-        const [decimalsResult, symbolResult] = await Promise.all([
-            tokenContract.decimals(),
-            tokenContract.symbol()
+        const [nameResult, decimalsResult, symbolResult] = await Promise.all([
+            tokenContract.name!(),
+            tokenContract.decimals!(),
+            tokenContract.symbol!()
         ]);
         
         const encryptedBalance = await tokenContract.balanceOf(account_address);
-        const decryptedBalance = await wallet.decryptValue(encryptedBalance);
-        const formattedBalance = ethers.formatUnits(decryptedBalance, decimalsResult);
         
-        return `Balance: ${formattedBalance}\nDecimals: ${decimalsResult}\nSymbol: ${symbolResult}`;
+        try {
+            const decryptedBalance = decryptBalance(encryptedBalance, COTI_MCP_AES_KEY);
+            const formattedBalance = ethers.formatUnits(decryptedBalance!, decimalsResult);
+            
+            return `Balance: ${formattedBalance}\nDecimals: ${decimalsResult}\nSymbol: ${symbolResult}\nName: ${nameResult}`;
+        } catch (error) {
+            console.error('Error decrypting private token balance:', error);
+            throw new Error(`Failed to decrypt private token balance: ${error instanceof Error ? error.message : String(error)}`);
+        }
     } catch (error) {
         console.error('Error fetching private token balance:', error);
         throw new Error(`Failed to get private token balance: ${error instanceof Error ? error.message : String(error)}`);
@@ -928,6 +1092,42 @@ async function performDeployPrivateERC721Contract(name: string, symbol: string, 
     }
 }
 
+async function performDeployPrivateERC20Contract(name: string, symbol: string, gas_limit?: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const bytecode = "0x60806040523480156200001157600080fd5b5060405162001b6338038062001b63833981016040819052620000349162000123565b818160046200004483826200021c565b5060056200005382826200021c565b5050505050620002e8565b634e487b7160e01b600052604160045260246000fd5b600082601f8301126200008657600080fd5b81516001600160401b0380821115620000a357620000a36200005e565b604051601f8301601f19908116603f01168101908282118183101715620000ce57620000ce6200005e565b81604052838152602092508683858801011115620000eb57600080fd5b600091505b838210156200010f5785820183015181830184015290820190620000f0565b600093810190920192909252949350505050565b600080604083850312156200013757600080fd5b82516001600160401b03808211156200014f57600080fd5b6200015d8683870162000074565b935060208501519150808211156200017457600080fd5b50620001838582860162000074565b9150509250929050565b600181811c90821680620001a257607f821691505b602082108103620001c357634e487b7160e01b600052602260045260246000fd5b50919050565b601f8211156200021757600081815260208120601f850160051c81016020861015620001f25750805b601f850160051c820191505b818110156200021357828155600101620001fe565b5050505b505050565b81516001600160401b038111156200023857620002386200005e565b62000250816200024984546200018d565b84620001c9565b602080601f8311600181146200028857600084156200026f5750858301515b600019600386901b1c1916600185901b17855562000213565b600085815260208120601f198616915b82811015620002b95788860151825594840194600190910190840162000298565b5085821015620002d85787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b61186b80620002f86000396000f3fe608060405234801561001057600080fd5b50600436106101515760003560e01c8063313ce567116100cd57806396b2db3811610081578063a7d9ad6a11610066578063a7d9ad6a146102dd578063a9059cbb146102f0578063dd62ed3e1461030357600080fd5b806396b2db38146102b7578063a42c0af9146102ca57600080fd5b8063722713f7116100b2578063722713f7146102945780638269bcc31461029c57806395d89b41146102af57600080fd5b8063313ce5671461025857806370a082311461026757600080fd5b806313691c761161012457806323b872dd1161010957806323b872dd1461021f57806326a9b3f1146102325780632893c5b01461024557600080fd5b806313691c76146101f857806318160ddd1461020d57600080fd5b8063043d20851461015657806306fdde031461019f57806308a2032a146101b4578063095ea7b3146101d5575b600080fd5b6101826101643660046113a9565b6001600160a01b039081166000908152602081905260409020541690565b6040516001600160a01b0390911681526020015b60405180910390f35b6101a7610338565b604051610196919061140a565b6101c76101c2366004611435565b6103ca565b604051908152602001610196565b6101e86101e3366004611493565b610401565b6040519015158152602001610196565b61020b6102063660046114bd565b61041b565b005b60065467ffffffffffffffff166101c7565b6101c761022d366004611501565b61048a565b6101e861024036600461153d565b6104ac565b61020b6102533660046114bd565b610546565b60405160068152602001610196565b6101c76102753660046113a9565b6001600160a01b03166000908152600160208190526040909120015490565b6101c7610589565b6101e86102aa3660046113a9565b610599565b6101a7610610565b6101c76102c536600461153d565b61061f565b6101e86102d836600461156e565b610688565b6101c76102eb36600461156e565b6106b0565b6101c76102fe366004611493565b6106cd565b6103166103113660046115bc565b6106e3565b6040805182518152602080840151908201529181015190820152606001610196565b606060048054610347906115ef565b80601f0160208091040260200160405190810160405280929190818152602001828054610373906115ef565b80156103c05780601f10610395576101008083540402835291602001916103c0565b820191906000526020600020905b8154815290600101906020018083116103a357829003601f168201915b5050505050905090565b600033816103df6103da85611693565b610755565b90506103ec8683836107e5565b6103f78686836108b8565b9695505050505050565b60003361040f818585610950565b60019150505b92915050565b600061042f8361042a84610afa565b610b4e565b905061043a81610ba6565b15610485576006805483919060009061045e90849067ffffffffffffffff1661174e565b92506101000a81548167ffffffffffffffff021916908367ffffffffffffffff1602179055505b505050565b6000336104988582856107e5565b6104a38585856108b8565b95945050505050565b6000806104b833610c37565b90508215610503573360009081526002602090815260408083206001600160a01b0388168452909152902080546104f8906104f290610c60565b83610c7d565b60019091015561040f565b6001600160a01b038416600090815260026020908152604080832033845290915290208054610535906104f290610c60565b600290910155600191505092915050565b600061055a8361055584610afa565b610d46565b905061056581610ba6565b15610485576006805483919060009061045e90849067ffffffffffffffff16611776565b600061059433610d97565b905090565b6000806105a533610d97565b33600090815260208190526040902080547fffffffffffffffffffffffff0000000000000000000000000000000000000000166001600160a01b03861617905590506105f18184610c7d565b3360009081526001602081905260409091208101919091559392505050565b606060058054610347906115ef565b6000811561065b573360009081526002602090815260408083206001600160a01b038716845290915290205461065490610c60565b9050610415565b6001600160a01b038316600090815260026020908152604080832033845290915290205461065490610c60565b600033816106986103da85611693565b90506106a5828683610950565b506001949350505050565b600033816106c06103da85611693565b90506104a38286836108b8565b6000336106db8185856108b8565b949350505050565b61070760405180606001604052806000815260200160008152602001600081525090565b506001600160a01b0391821660009081526002602081815260408084209490951683529283529083902083516060810185528154815260018201549381019390935201549181019190915290565b805160208201516040517fe4f36e1000000000000000000000000000000000000000000000000000000000815260009260649263e4f36e10926107a292600160fa1b9290916004016117ad565b6020604051808303816000875af11580156107c1573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061041591906117ee565b6001600160a01b03831660009081526001602052604081205461080790610c60565b6001600160a01b0380861660009081526002602090815260408083209388168352929052908120549192509061083c90610c60565b9050600061085a8261085567ffffffffffffffff610afa565b610db9565b905060006108688486610e39565b905060006108768487610e39565b905060006108a06108908561088b8686610e4e565b610e4e565b61089a878a610e62565b87610e77565b90506108ad898983610950565b505050505050505050565b60006001600160a01b038416610902576040517f96c6fd1e000000000000000000000000000000000000000000000000000000008152600060048201526024015b60405180910390fd5b6001600160a01b038316610945576040517fec442f05000000000000000000000000000000000000000000000000000000008152600060048201526024016108f9565b6106db848484610f3c565b6001600160a01b038316610993576040517fe602df05000000000000000000000000000000000000000000000000000000008152600060048201526024016108f9565b6001600160a01b0382166109d6576040517f94280d62000000000000000000000000000000000000000000000000000000008152600060048201526024016108f9565b60006109e18261109a565b905060006109ee85610c37565b905060006109fc8483610c7d565b9050610a0785610c37565b91506000610a158584610c7d565b905060405180606001604052808581526020018381526020018281525060026000896001600160a01b03166001600160a01b031681526020019081526020016000206000886001600160a01b03166001600160a01b03168152602001908152602001600020600082015181600001556020820151816001015560408201518160020155905050856001600160a01b0316876001600160a01b03167fb3fd5071835887567a0671151121894ddccc2842f1d10bedad13e0d17cace9a78484604051610ae9929190918252602082015260400190565b60405180910390a350505050505050565b6040517fd9b60b60000000000000000000000000000000000000000000000000000000008152600160fa1b600482015267ffffffffffffffff8216602482015260009060649063d9b60b60906044016107a2565b60006001600160a01b038316610b93576040517f96c6fd1e000000000000000000000000000000000000000000000000000000008152600060048201526024016108f9565b610b9f83600084610f3c565b9392505050565b6040517f0cfed56100000000000000000000000000000000000000000000000000000000815260006004820181905260248201839052908190606490630cfed561906044016020604051808303816000875af1158015610c0a573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610c2e91906117ee565b15159392505050565b6001600160a01b0380821660009081526020819052604081205490911680610415575090919050565b600081600003610c74576104156000610afa565b610415826110f4565b60408051606083901b7fffffffffffffffffffffffffffffffffffffffff0000000000000000000000001660208201528151601481830301815260348201928390527f3c6f0e6800000000000000000000000000000000000000000000000000000000909252600091606491633c6f0e6891610d0391600160fa1b9188916038016117ad565b6020604051808303816000875af1158015610d22573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610b9f91906117ee565b60006001600160a01b038316610d8b576040517fec442f05000000000000000000000000000000000000000000000000000000008152600060048201526024016108f9565b610b9f60008484610f3c565b6001600160a01b038116600090815260016020526040812054610b9f81610c60565b60006064637c12a1eb610dce60048085611104565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e084901b1681527fffffff000000000000000000000000000000000000000000000000000000000090911660048201526024810186905260448101859052606401610d03565b6000606463dd148693610dce60048085611104565b6000606463fb7da35f610dce838080611104565b6000606463371d1bf2610dce60048085611104565b600060646320cc408d610e8c60048085611104565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e084901b1681527fffffff000000000000000000000000000000000000000000000000000000000090911660048201526024810187905260448101869052606481018590526084016020604051808303816000875af1158015610f18573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106db91906117ee565b6000808281610f4b6001611161565b90506001600160a01b038716610fa2576000610f68600354610c60565b9050610f7481876111c0565b9050610f7f8161109a565b6003556000610f8d88610d97565b9050610f9981886111c0565b94505050610fea565b6000610fad88610d97565b90506000610fba88610d97565b90506000610fc983838a6111d5565b90975094509050610fda8a82611293565b610fe48683610e62565b94505050505b6001600160a01b038616611025576000611005600354610c60565b90506110118184610e62565b905061101c8161109a565b6003555061102f565b61102f8684611293565b856001600160a01b0316876001600160a01b03167f9ed053bb818ff08b8353cd46f78db1f0799f31c9e4458fdb425c10eccd2efc4461106e858b610c7d565b611078868b610c7d565b6040805192835260208301919091520160405180910390a39695505050505050565b6000606463c50c9c0260045b60f81b846040518363ffffffff1660e01b81526004016107a29291907fff00000000000000000000000000000000000000000000000000000000000000929092168252602082015260400190565b6000606463d2c135e560046110a6565b600081600281111561111857611118611797565b60ff16600884600481111561112f5761112f611797565b61ffff16901b61ffff16601086600481111561114d5761114d611797565b62ffffff16901b171760e81b949350505050565b60008082611170576000611173565b60015b6040517fd9b60b600000000000000000000000000000000000000000000000000000000081526000600482015260ff9190911660248201819052915060649063d9b60b6090604401610d03565b60006064638c5d0150610dce60048085611104565b6000808080808060646356c72d286111f060048080866112d9565b6040517fffffffff0000000000000000000000000000000000000000000000000000000060e084901b81168252919091166004820152602481018c9052604481018b9052606481018a90526084016060604051808303816000875af115801561125d573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906112819190611807565b919b909a509098509650505050505050565b600061129e83610c37565b90506112aa8282611359565b6001600160a01b0390931660009081526001602081815260409092208551815594909101519301929092555050565b60008160028111156112ed576112ed611797565b60ff16600884600481111561130457611304611797565b61ffff16901b61ffff16601086600481111561132257611322611797565b62ffffff16901b62ffffff16601888600481111561134257611342611797565b63ffffffff16901b17171760e01b95945050505050565b60408051808201909152600080825260208201526113768361109a565b81526113828383610c7d565b602082015292915050565b80356001600160a01b03811681146113a457600080fd5b919050565b6000602082840312156113bb57600080fd5b610b9f8261138d565b6000815180845260005b818110156113ea576020818501810151868301820152016113ce565b506000602082860101526020601f19601f83011685010191505092915050565b602081526000610b9f60208301846113c4565b60006040828403121561142f57600080fd5b50919050565b60008060006060848603121561144a57600080fd5b6114538461138d565b92506114616020850161138d565b9150604084013567ffffffffffffffff81111561147d57600080fd5b6114898682870161141d565b9150509250925092565b600080604083850312156114a657600080fd5b6114af8361138d565b946020939093013593505050565b600080604083850312156114d057600080fd5b6114d98361138d565b9150602083013567ffffffffffffffff811681146114f657600080fd5b809150509250929050565b60008060006060848603121561151657600080fd5b61151f8461138d565b925061152d6020850161138d565b9150604084013590509250925092565b6000806040838503121561155057600080fd5b6115598361138d565b9150602083013580151581146114f657600080fd5b6000806040838503121561158157600080fd5b61158a8361138d565b9150602083013567ffffffffffffffff8111156115a657600080fd5b6115b28582860161141d565b9150509250929050565b600080604083850312156115cf57600080fd5b6115d88361138d565b91506115e66020840161138d565b90509250929050565b600181811c9082168061160357607f821691505b60208210810361142f57634e487b7160e01b600052602260045260246000fd5b634e487b7160e01b600052604160045260246000fd5b6040805190810167ffffffffffffffff8111828210171561165c5761165c611623565b60405290565b604051601f8201601f1916810167ffffffffffffffff8111828210171561168b5761168b611623565b604052919050565b6000604082360312156116a557600080fd5b6116ad611639565b8235815260208084013567ffffffffffffffff808211156116cd57600080fd5b9085019036601f8301126116e057600080fd5b8135818111156116f2576116f2611623565b61170484601f19601f84011601611662565b9150808252368482850101111561171a57600080fd5b80848401858401376000908201840152918301919091525092915050565b634e487b7160e01b600052601160045260246000fd5b67ffffffffffffffff82811682821603908082111561176f5761176f611738565b5092915050565b67ffffffffffffffff81811683821601908082111561176f5761176f611738565b634e487b7160e01b600052602160045260246000fd5b7fff00000000000000000000000000000000000000000000000000000000000000841681528260208201526060604082015260006104a360608301846113c4565b60006020828403121561180057600080fd5b5051919050565b60008060006060848603121561181c57600080fd5b835192506020840151915060408401519050925092509256fea26469706673582212206d1a1f810adb77d9200d26788a93d223edb192d6e868c44513f0ad1f5059a66564736f6c63430008130033"
+        
+        const factory = new ethers.ContractFactory(
+            ERC20_ABI,
+            bytecode,
+            wallet
+        );
+        
+        const txOptions: any = {};
+        if (gas_limit) {
+            txOptions.gasLimit = gas_limit;
+        }
+        
+        const contract = await factory.deploy(
+            name,
+            symbol,
+            txOptions
+        );
+
+        const receipt = await contract.deploymentTransaction();
+        const contractAddress = await contract.getAddress();
+        
+        return `Private ERC20 Contract Deployment Successful!\n\nName: ${name}\n\nSymbol: ${symbol}\n\nContract Address: ${contractAddress}\nTransaction Hash: ${receipt?.hash}`;
+    } catch (error) {
+        console.error('Error deploying private ERC20 contract:', error);
+        throw new Error(`Failed to deploy private ERC20 contract: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
 async function performGetPrivateERC721TokenURI(token_address: string, token_id: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -953,12 +1153,11 @@ async function performGetPrivateERC721TokenURI(token_address: string, token_id: 
         
         return `Token: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nDecrypted Token URI: ${tokenURI}`;
     } catch (error) {
-        console.error('Error getting private ERC721 token URI:', error);
         throw new Error(`Failed to get private ERC721 token URI: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
-async function performMintPrivateERC721Token(token_address: string, token_uri: string, gas_limit: string) {
+async function performMintPrivateERC721Token(token_address: string, token_uri: string, gas_limit?: string) {
     try {
         const provider = getDefaultProvider(CotiNetwork.Testnet);
         const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
@@ -967,21 +1166,60 @@ async function performMintPrivateERC721Token(token_address: string, token_uri: s
         
         const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
         
+        // Get the mint function selector
         const mintSelector = tokenContract.mint.fragment.selector;
         
-        const encryptedInputText = buildStringInputText(token_uri, 
-        { wallet: wallet, userKey: COTI_MCP_AES_KEY }, token_address, mintSelector);
+        // Format the token URI using the buildStringInputText function
+        const encryptedInputText = buildStringInputText(token_uri, { wallet: wallet, userKey: COTI_MCP_AES_KEY }, token_address, mintSelector);
         
-        const mintTx = await tokenContract.mint(encryptedInputText, {
-            gasLimit: gas_limit
-        });
+        const txOptions: any = {};
+        if (gas_limit) {
+            txOptions.gasLimit = gas_limit;
+        }
         
+        const mintTx = await tokenContract.mint(encryptedInputText, txOptions);
         const receipt = await mintTx.wait();
         
-        return `Private ERC721 Token Minted Successfully!\nTransaction Hash: ${receipt ? receipt.hash : 'unknown'}\nToken URI: ${token_uri}`;
+        // Get the token ID from the event logs
+        let tokenId = "Unknown";
+        if (receipt && receipt.logs && receipt.logs.length > 0) {
+            // Typically the first log contains the Transfer event with the token ID
+            const transferEvent = receipt.logs[0];
+            if (transferEvent && transferEvent.topics && transferEvent.topics.length > 3) {
+                // The token ID is typically in the third topic (index 2)
+                tokenId = BigInt(transferEvent.topics[3]).toString();
+            }
+        }
+        
+        return `NFT Minting Successful!\nToken Address: ${token_address}\nToken URI: ${token_uri}\nToken ID: ${tokenId}\nTransaction Hash: ${receipt.hash}`;
     } catch (error) {
         console.error('Error minting private ERC721 token:', error);
-        throw new Error(`Failed to mint private ERC721 token: ${error instanceof Error ? error.message : String(error)},`);
+        throw new Error(`Failed to mint private ERC721 token: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performMintPrivateERC20Token(token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string) {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(COTI_MCP_PRIVATE_KEY, provider);
+        
+        wallet.setAesKey(COTI_MCP_AES_KEY);
+        
+        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
+        
+        const txOptions: any = {};
+        if (gas_limit) {
+            txOptions.gasLimit = gas_limit;
+        }
+        
+        const mintTx = await tokenContract.mint(recipient_address, BigInt(amount_wei), txOptions);
+
+        const receipt = await mintTx.wait();
+        
+        return `ERC20 Token Minting Successful!\nToken Address: ${token_address}\nRecipient: ${recipient_address}\nAmount: ${amount_wei}\nTransaction Hash: ${receipt.hash}`;
+    } catch (error) {
+        console.error('Error minting private ERC20 token:', error);
+        throw new Error(`Failed to mint private ERC20 token: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
@@ -1034,7 +1272,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GET_PRIVATE_ERC721_TOKEN_URI,
         GET_PRIVATE_ERC20_TOKEN_ALLOWANCE,
         DEPLOY_PRIVATE_ERC721_CONTRACT,
+        DEPLOY_PRIVATE_ERC20_CONTRACT,
         MINT_PRIVATE_ERC721_TOKEN,
+        MINT_PRIVATE_ERC20_TOKEN,
         ENCRYPT_VALUE, 
         DECRYPT_VALUE
     ],
@@ -1188,6 +1428,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     isError: false,
                 };
             }
+
+            case "deploy_private_erc20_contract": {
+                if (!isDeployPrivateERC20ContractArgs(args)) {
+                    throw new Error("Invalid arguments for deploy_private_erc20_contract");
+                }
+                const { name, symbol } = args;
+
+                const results = await performDeployPrivateERC20Contract(name, symbol);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
             
             case "mint_private_erc721_token": {
                 if (!isMintPrivateERC721TokenArgs(args)) {
@@ -1196,6 +1449,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { token_address, token_uri, gas_limit } = args;
 
                 const results = await performMintPrivateERC721Token(token_address, token_uri, gas_limit);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "mint_private_erc20_token": {
+                if (!isMintPrivateERC20TokenArgs(args)) {
+                    throw new Error("Invalid arguments for mint_private_erc20_token");
+                }
+                const { token_address, recipient_address, amount_wei, gas_limit } = args;
+
+                const results = await performMintPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
