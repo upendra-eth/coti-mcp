@@ -2,7 +2,20 @@
 
 [![smithery badge](https://smithery.ai/badge/@davibauer/coti-mcp)](https://smithery.ai/server/@davibauer/coti-mcp)
 
-The COTI Blockchain MCP integrates COTI blockchain access into AI applications.
+The COTI Blockchain MCP integrates COTI blockchain access into AI applications, enabling seamless interaction with the COTI blockchain's private token functionality through a comprehensive set of tools.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Available Tools](#available-tools)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Usage](#usage)
+- [Additional Resources](#additional-resources)
+
+## Overview
+
+This MCP (Model Context Protocol) server provides a complete implementation for interacting with the COTI blockchain, focusing on private token operations. It allows AI applications to deploy, mint, transfer, and manage both ERC20 tokens and ERC721 NFTs with privacy features enabled through COTI's MPC (Multi-Party Computation) technology.
 
 ## Available Tools
 
@@ -186,7 +199,6 @@ None
 
 For this COTI Blockchain MCP, you need:
 - NodeJS v18 or higher (https://nodejs.org/)
-- Git (https://git-scm.com/)
 - COTI AES Key for API authentication
 - COTI Private Key for signing transactions
 - COTI Public Key that corresponds to the private key
@@ -194,23 +206,30 @@ For this COTI Blockchain MCP, you need:
 ## Setup
 
 1. Clone the repository
-```
+```bash
 git clone https://github.com/yourusername/coti-mcp.git
+cd coti-mcp
 ```
 
 2. Install dependencies
-```
+```bash
 npm install
 ```
 
 3. Build project
-```
+```bash
 npm run build
 ```
 
 This creates the file `build\index.js`
 
-## Using in Claude AI
+## Usage
+
+### Smithery
+
+Go to https://smithery.ai/server/@davibauer/coti-mcp and follow the instructions.
+
+### Local
 
 Add the following entry to `mcpServers`:
 
@@ -237,7 +256,7 @@ Notes:
 
 so that `mcpServers` will look like this:
 
-```
+```json
 {
   "mcpServers": {
     "coti-mcp": {
@@ -255,3 +274,12 @@ so that `mcpServers` will look like this:
   }
 }
 ```
+
+## Additional Resources
+
+- [COTI Documentation](https://docs.coti.io)
+- [MCP Server Documentation](https://smithery.ai/server/@davibauer/coti-mcp)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
