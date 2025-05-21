@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/@davibauer/coti-mcp)](https://smithery.ai/server/@davibauer/coti-mcp)
 
-The COTI Blockchain MCP integrates COTI blockchain access into AI applications, enabling seamless interaction with the COTI blockchain's private token functionality through a comprehensive set of tools.
+The MCP server integrates COTI blockchain access into AI applications, enabling interaction with several tools for private token operations.
 
 ## Table of Contents
 
