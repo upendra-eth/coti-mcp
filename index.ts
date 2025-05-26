@@ -6,7 +6,7 @@ import {
     ListToolsRequestSchema,
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
+import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers, TransactionReceipt } from '@coti-io/coti-ethers';
 import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
 
 interface AccountKeys {
@@ -894,6 +894,25 @@ const GENERATE_AES_KEY: Tool = {
     }
 };
 
+const GET_TRANSACTION_STATUS: Tool = {
+    name: "get_transaction_status",
+    description:
+        "Get the status of a transaction on the COTI blockchain. " +
+        "This is used for checking if a transaction has been confirmed, pending, or failed. " +
+        "Requires a transaction hash as input. " +
+        "Returns detailed information about the transaction status.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            transaction_hash: {
+                type: "string",
+                description: "Transaction hash to check status for",
+            }
+        },
+        required: ["transaction_hash"],
+    },
+};
+
 /**
  * Masks a sensitive string by showing only the first 4 and last 4 characters
  * @param str The string to mask
@@ -919,7 +938,7 @@ async function performCreateAccount(set_as_default: boolean = false): Promise<st
         const privateKey = newWallet.privateKey;
         const address = newWallet.address;
         
-        const aesKey = "Onboard your wallet to get your AES key.";
+        const aesKey = "Fund this account to generate an AES key. Go to https://discord.com/invite/Z4r8D6ez49";
         
         const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
         const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
@@ -937,10 +956,10 @@ async function performCreateAccount(set_as_default: boolean = false): Promise<st
             process.env.COTI_MCP_CURRENT_PUBLIC_KEY = address;
         }
         
-        return `New COTI account created successfully!\n` +
-               `Address: ${address}\n` +
-               `Private Key: ${privateKey}\n` +
-               `AES Key: ${aesKey}\n` +
+        return `New COTI account created successfully!\n\n` +
+               `Address: ${address}\n\n` +
+               `Private Key: ${privateKey}\n\n` +
+               `AES Key: ${aesKey}\n\n` +
                `${set_as_default ? 'Set as default account.' : 'Not set as default account.'}`;
     } catch (error) {
         console.error('Error creating new account:', error);
@@ -986,7 +1005,7 @@ async function performGenerateAesKey(account_address: string): Promise<string> {
 
         process.env.COTI_MCP_AES_KEY = aesKeys.join(',');
 
-        return "AES key: " + aesKey + "\n" +
+        return "AES key: " + aesKey + "\n\n" +
                "Address: " + wallet.address;
     } catch (error) {
         console.error('Error generating AES key:', error);
@@ -1009,7 +1028,7 @@ async function performListAccounts(): Promise<string> {
             return "No COTI accounts configured in the environment.";
         }
         
-        let result = "Available COTI Accounts:\n";
+        let result = "Available COTI Accounts:\n\n";
         result += "======================\n\n";
         
         for (let i = 0; i < publicKeys.length; i++) {
@@ -1018,9 +1037,9 @@ async function performListAccounts(): Promise<string> {
             const aesKey = aesKeys[i] ? maskSensitiveString(aesKeys[i]) : "Not available";
             const isDefault = publicKey === currentAccount ? " (DEFAULT)" : "";
             
-            result += `Account ${i + 1}${isDefault}:\n`;
-            result += `Address: ${publicKey}\n`;
-            result += `Private Key: ${privateKey}\n`;
+            result += `Account ${i + 1}${isDefault}:\n\n`;
+            result += `Address: ${publicKey}\n\n`;
+            result += `Private Key: ${privateKey}\n\n`;
             result += `AES Key: ${aesKey}\n\n`;
         }
         
@@ -1028,6 +1047,52 @@ async function performListAccounts(): Promise<string> {
     } catch (error) {
         console.error('Error listing accounts:', error);
         throw new Error(`Failed to list accounts: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performGetTransactionStatus(transaction_hash: string): Promise<string> {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const receipt = await provider.getTransactionReceipt(transaction_hash);
+        const tx = await provider.getTransaction(transaction_hash);
+        
+        if (!tx) {
+            return `Transaction Not Found\nTransaction Hash: ${transaction_hash}\nStatus: Unknown (Transaction not found on the blockchain)`;
+        }
+        
+        let status = 'Pending';
+        let gasUsed = 'N/A';
+        let blockNumber = 'N/A';
+        let confirmations = '0';
+        
+        if (receipt) {
+            status = receipt.status ? 'Success' : 'Failed';
+            gasUsed = receipt.gasUsed.toString();
+            blockNumber = receipt.blockNumber.toString();
+            
+            const currentBlock = await provider.getBlockNumber();
+            confirmations = (currentBlock - receipt.blockNumber).toString();
+        }
+        
+        let result = `Transaction Hash: ${transaction_hash}\n\n`;
+        result += `Status: ${status}\n\n`;
+        result += `From: ${tx.from}\n\n`;
+        result += `To: ${tx.to || 'Contract Creation'}\n\n`;
+        result += `Value: ${ethers.formatEther(tx.value)} COTI\n\n`;
+        result += `Gas Price: ${ethers.formatUnits(tx.gasPrice || 0, 'gwei')} Gwei\n\n`;
+        result += `Gas Limit: ${tx.gasLimit.toString()}\n\n`;
+        result += `Gas Used: ${gasUsed}\n\n`;
+        result += `Nonce: ${tx.nonce}\n\n`;
+        result += `Block Number: ${blockNumber}\n\n`;
+        result += `Confirmations: ${confirmations}\n\n`;
+
+        const network = await provider.getNetwork();
+        result += `https://${network.name === 'mainnet' ? 'mainnet' : 'testnet'}.cotiscan.io/tx/${transaction_hash}\n\n`;
+        
+        return result;
+    } catch (error) {
+        console.error('Error getting transaction status:', error);
+        throw new Error(`Failed to get transaction status: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
@@ -1268,6 +1333,15 @@ function isGenerateAesKeyArgs(args: unknown): args is { account_address: string 
         args !== null &&
         "account_address" in args &&
         typeof (args as { account_address: string }).account_address === "string"
+    );
+}
+
+function isGetTransactionStatusArgs(args: unknown): args is { transaction_hash: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "transaction_hash" in args &&
+        typeof (args as { transaction_hash: string }).transaction_hash === "string"
     );
 }
 
@@ -1519,7 +1593,7 @@ async function performDeployPrivateERC20Contract(name: string, symbol: string, g
         const receipt = await contract.deploymentTransaction();
         const contractAddress = await contract.getAddress();
         
-        return `Private ERC20 Contract Deployment Successful!\n\nName: ${name}\n\nSymbol: ${symbol}\n\nContract Address: ${contractAddress}\nTransaction Hash: ${receipt?.hash}`;
+        return `Private ERC20 Contract Deployment Successful!\n\nName: ${name}\n\nSymbol: ${symbol}\n\nContract Address: ${contractAddress}\n\nTransaction Hash: ${receipt?.hash}`;
     } catch (error) {
         console.error('Error deploying private ERC20 contract:', error);
         throw new Error(`Failed to deploy private ERC20 contract: ${error instanceof Error ? error.message : String(error)}`);
@@ -1757,6 +1831,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CHANGE_DEFAULT_ACCOUNT,
         CREATE_ACCOUNT,
         GENERATE_AES_KEY,
+        GET_TRANSACTION_STATUS,
         LIST_ACCOUNTS
     ],
 }));
@@ -2021,6 +2096,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             case "list_accounts": {
                 const results = await performListAccounts();
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+
+            case "get_transaction_status": {
+                if (!isGetTransactionStatusArgs(args)) {
+                    throw new Error("Invalid arguments for get_transaction_status");
+                }
+                const { transaction_hash } = args;
+
+                const results = await performGetTransactionStatus(transaction_hash);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
