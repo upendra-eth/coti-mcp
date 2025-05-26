@@ -866,6 +866,34 @@ const LIST_ACCOUNTS: Tool = {
     }
 };
 
+const CREATE_ACCOUNT: Tool = {
+    name: "create_account",
+    description: "Create a new COTI account with a randomly generated private key and AES key. Returns the new account address, private key, and AES key.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            set_as_default: {
+                type: "boolean",
+                description: "Optional, whether to set the new account as the default account. Default is false."
+            }
+        }
+    }
+};
+
+const GENERATE_AES_KEY: Tool = {
+    name: "generate_aes_key",
+    description: "Generate a new AES key for the current account. Returns the AES key.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            account_address: {
+                type: "string",
+                description: "The address of the account to generate the AES key for."
+            }
+        }
+    }
+};
+
 /**
  * Masks a sensitive string by showing only the first 4 and last 4 characters
  * @param str The string to mask
@@ -879,8 +907,96 @@ function maskSensitiveString(str: string): string {
 }
 
 /**
- * Lists all available COTI accounts configured in the environment
- * @returns A formatted string with account information
+ * Creates a new COTI account with a randomly generated private key and AES key.
+ * @param set_as_default Optional, whether to set the new account as the default account. Default is false.
+ * @returns A formatted string with the new account address, private key, and AES key.
+ */
+async function performCreateAccount(set_as_default: boolean = false): Promise<string> {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const newWallet = Wallet.createRandom(provider);
+        
+        const privateKey = newWallet.privateKey;
+        const address = newWallet.address;
+        
+        const aesKey = "Onboard your wallet to get your AES key.";
+        
+        const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
+        const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
+        const aesKeys = (process.env.COTI_MCP_AES_KEY || '').split(',').filter(Boolean);
+        
+        publicKeys.push(address);
+        privateKeys.push(privateKey);
+        aesKeys.push(aesKey);
+        
+        process.env.COTI_MCP_PUBLIC_KEY = publicKeys.join(',');
+        process.env.COTI_MCP_PRIVATE_KEY = privateKeys.join(',');
+        process.env.COTI_MCP_AES_KEY = aesKeys.join(',');
+        
+        if (set_as_default) {
+            process.env.COTI_MCP_CURRENT_PUBLIC_KEY = address;
+        }
+        
+        return `New COTI account created successfully!\n` +
+               `Address: ${address}\n` +
+               `Private Key: ${privateKey}\n` +
+               `AES Key: ${aesKey}\n` +
+               `${set_as_default ? 'Set as default account.' : 'Not set as default account.'}`;
+    } catch (error) {
+        console.error('Error creating new account:', error);
+        throw new Error(`Failed to create new account: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+/**
+ * Generates a new AES key for the current account.
+ * @param account_address The address of the account to generate the AES key for.
+ * @returns The generated AES key.
+ */
+async function performGenerateAesKey(account_address: string): Promise<string> {
+    try {
+        const currentAccountKeys = getAccountKeys(account_address);
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
+
+        await wallet.generateOrRecoverAes();
+
+        const aesKey = wallet.getUserOnboardInfo()?.aesKey;
+
+        if (aesKey !== null && typeof aesKey !== 'string') {
+            throw new Error('AES key is not a string');
+        }
+
+        if (!aesKey) {
+            throw new Error('Failed to generate AES key');
+        }
+
+        // set the aes key for the account
+        const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
+        const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
+        const aesKeys = (process.env.COTI_MCP_AES_KEY || '').split(',').filter(Boolean);
+
+        const addressIndex = publicKeys.findIndex(key => key.toLowerCase() === account_address.toLowerCase());
+
+        if (addressIndex === -1 || !privateKeys[addressIndex] || !aesKeys[addressIndex]) {
+            throw new Error(`No keys found for account: ${account_address}`);
+        }
+
+        aesKeys[addressIndex] = aesKey;
+
+        process.env.COTI_MCP_AES_KEY = aesKeys.join(',');
+
+        return "AES key: " + aesKey + "\n" +
+               "Address: " + wallet.address;
+    } catch (error) {
+        console.error('Error generating AES key:', error);
+        throw new Error(`Failed to generate AES key: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+/**
+ * Lists all available COTI accounts configured in the environment.
+ * @returns A formatted string with account information.
  */
 async function performListAccounts(): Promise<string> {
     try {
@@ -1138,11 +1254,20 @@ function isChangeDefaultAccountArgs(args: unknown): args is { account_address: s
     );
 }
 
-function isListAccountsArgs(args: unknown): args is Record<string, never> {
+function isCreateAccountArgs(args: unknown): args is { set_as_default?: boolean } {
     return (
         typeof args === "object" &&
         args !== null &&
-        Object.keys(args).length === 0
+        (!('set_as_default' in args) || typeof (args as { set_as_default?: boolean }).set_as_default === 'boolean')
+    );
+}
+
+function isGenerateAesKeyArgs(args: unknown): args is { account_address: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "account_address" in args &&
+        typeof (args as { account_address: string }).account_address === "string"
     );
 }
 
@@ -1630,6 +1755,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         ENCRYPT_VALUE, 
         DECRYPT_VALUE,
         CHANGE_DEFAULT_ACCOUNT,
+        CREATE_ACCOUNT,
+        GENERATE_AES_KEY,
         LIST_ACCOUNTS
     ],
 }));
@@ -1866,6 +1993,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 };
             }
 
+            case "create_account": {
+                if (!isCreateAccountArgs(args)) {
+                    throw new Error("Invalid arguments for create_account");
+                }
+                const { set_as_default } = args;
+
+                const results = await performCreateAccount(set_as_default || false);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+
+            case "generate_aes_key": {
+                if (!isGenerateAesKeyArgs(args)) {
+                    throw new Error("Invalid arguments for generate_aes_key");
+                }
+                const { account_address } = args;
+
+                const results = await performGenerateAesKey(account_address);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
             case "list_accounts": {
                 const results = await performListAccounts();
                 return {
