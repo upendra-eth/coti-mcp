@@ -9,39 +9,7 @@ import {
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
 import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
-
-interface AccountKeys {
-    privateKey: string;
-    aesKey: string;
-}
-
-function getAccountKeys(publicAddress?: string): AccountKeys {
-    const address = publicAddress || process.env.COTI_MCP_PUBLIC_KEY?.split(',')[0];
-    
-    if (!address) {
-        throw new Error('No account address provided and no default account set');
-    }
-    
-    const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',');
-    const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',');
-    const aesKeys = (process.env.COTI_MCP_AES_KEY || '').split(',');
-    
-    const addressIndex = publicKeys.findIndex(key => 
-        key.toLowerCase() === address.toLowerCase());
-    
-    if (addressIndex === -1 || !privateKeys[addressIndex] || !aesKeys[addressIndex]) {
-        throw new Error(`No keys found for account: ${address}`);
-    }
-    
-    return { 
-        privateKey: privateKeys[addressIndex], 
-        aesKey: aesKeys[addressIndex] 
-    };
-}
-
-function getCurrentAccountKeys(): AccountKeys {
-    return getAccountKeys(process.env.COTI_MCP_CURRENT_PUBLIC_KEY);
-}
+import { getAccountKeys, getCurrentAccountKeys } from "./tools/shared/account.js";
 
 const ERC20_ABI = [
   // Constructor
