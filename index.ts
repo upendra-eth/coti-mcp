@@ -34,7 +34,10 @@ import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/
 import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/decryptValue.js";
 import { CALL_CONTRACT_FUNCTION, isCallContractFunctionArgs, performCallContractFunction } from "./tools/callContractFunction.js";
 import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from "./tools/decodeEventData.js";
+
+// Transaction tools
 import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
+import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/getTransactionLogs.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -192,79 +195,6 @@ const MINT_PRIVATE_ERC721_TOKEN: Tool = {
     },
 };
 
-const GET_TRANSACTION_LOGS: Tool = {
-    name: "get_transaction_logs",
-    description:
-        "Get the logs from a transaction on the COTI blockchain. " +
-        "This is used for retrieving event logs emitted during transaction execution. " +
-        "Requires a transaction hash as input. " +
-        "Returns detailed information about the transaction logs including event names, topics, and data.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            transaction_hash: {
-                type: "string",
-                description: "Transaction hash to get logs for",
-            }
-        },
-        required: ["transaction_hash"],
-    },
-};
-
-async function performGetTransactionLogs(transaction_hash: string): Promise<string> {
-    try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        let receipt;
-        try {
-            receipt = await provider.getTransactionReceipt(transaction_hash);
-        } catch (error) {
-            return `Transaction Not Found or Pending\nTransaction Hash: ${transaction_hash}\nStatus: No logs available (Transaction may be pending or not found)`;
-        }
-
-        if (!receipt) {
-            return `Transaction Not Found or Pending\nTransaction Hash: ${transaction_hash}\nStatus: No logs available (Transaction may be pending or not found)`;
-        }
-
-        const logs = receipt.logs;
-        
-        if (!logs || logs.length === 0) {
-            return `Transaction Hash: ${transaction_hash}\n\nNo logs found for this transaction.`;
-        }
-        
-        let result = `Transaction Hash: ${transaction_hash}\n\n`;
-        result += `Total Logs: ${logs.length}\n\n`;
-        
-        logs.forEach((log, index) => {
-            result += `Log #${index + 1}:\n`;
-            result += `  Address: ${log.address}\n`;
-            result += `  Block Number: ${log.blockNumber}\n`;
-            result += `  Transaction Index: ${log.transactionIndex}\n`;
-            result += `  Log Index: ${log.index !== undefined ? log.index : 'N/A'}\n`;
-            result += `  Removed: ${log.removed !== undefined ? log.removed : 'false'}\n`;
-            
-            result += `  Topics (${log.topics.length}):\n`;
-            log.topics.forEach((topic, topicIndex) => {
-                result += `    Topic ${topicIndex}: ${topic}\n`;
-            });
-
-            result += `  Data: ${log.data}\n\n`;
-            
-            if (log.topics.length > 0) {
-                const eventSignature = log.topics[0];
-                result += `  Event Signature: ${eventSignature}\n\n`;
-            }
-        });
-        
-        const network = await provider.getNetwork();
-        result += `View on Explorer: https://${network.name === 'mainnet' ? 'mainnet' : 'testnet'}.cotiscan.io/tx/${transaction_hash}\n`;
-        
-        return result;
-    } catch (error) {
-        console.error('Error getting transaction logs:', error);
-        throw new Error(`Failed to get transaction logs: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
 const server = new Server(
     {
         name: "coti/blockchain-mcp",
@@ -364,15 +294,6 @@ function isDeployPrivateERC721ContractArgs(args: unknown): args is { name: strin
         "symbol" in args &&
         typeof (args as { symbol: string }).symbol === "string" &&
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
-    );
-}
-
-function isGetTransactionLogsArgs(args: unknown): args is { transaction_hash: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "transaction_hash" in args &&
-        typeof (args as any).transaction_hash === "string"
     );
 }
 
