@@ -13,37 +13,7 @@ import { GET_PRIVATE_ERC20_TOKEN_BALANCE, performGetPrivateERC20TokenBalance, is
 import { buildInputText, buildStringInputText } from '@coti-io/coti-sdk-typescript';
 import { getAccountKeys, getCurrentAccountKeys } from "./tools/shared/account.js";
 import { ERC20_ABI, ERC721_ABI } from "./tools/constants/abis.js";
-
-const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
-    name: "transfer_private_erc20",
-    description:
-        "Transfer private ERC20 tokens on the COTI blockchain. " +
-        "This is used for sending private tokens from your wallet to another address. " +
-        "Requires token contract address, recipient address, and amount as input. " +
-        "Returns the transaction hash upon successful transfer.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-            recipient_address: {
-                type: "string",
-                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of tokens to transfer (in Wei)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "recipient_address", "amount_wei"],
-    },
-};
+import { isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token, TRANSFER_PRIVATE_ERC20_TOKEN } from "./tools/transferPrivateErc20.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -878,20 +848,6 @@ if (!COTI_MCP_PUBLIC_KEY) {
     process.exit(1);
 }
 
-function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "token_address" in args &&
-        typeof (args as { token_address: string }).token_address === "string" &&
-        "recipient_address" in args &&
-        typeof (args as { recipient_address: string }).recipient_address === "string" &&
-        "amount_wei" in args &&
-        typeof (args as { amount_wei: string }).amount_wei === "string" &&
-        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
-    );
-}
-
 function isTransferPrivateERC721TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, token_id: string, use_safe_transfer?: boolean, gas_limit?: string } {
     return (
         typeof args === "object" &&
@@ -1098,38 +1054,7 @@ function isCallContractFunctionArgs(args: unknown): args is { contract_address: 
     );
 }
 
-async function performTransferPrivateERC20Token(token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        wallet.setAesKey(currentAccountKeys.aesKey);
 
-        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
-        
-        const symbolResult = await tokenContract.symbol();
-        
-        const txOptions: any = {};
-        if (gas_limit) {
-            txOptions.gasLimit = gas_limit;
-        }
-
-        const transferSelector = tokenContract.transfer.fragment.selector;
-
-        const encryptedInputText = buildInputText(BigInt(amount_wei), 
-        { wallet: wallet, userKey: currentAccountKeys.aesKey }, token_address, transferSelector);
-
-        const tx = await tokenContract.transfer(recipient_address, encryptedInputText, txOptions);
-        
-        const receipt = await tx.wait();
-
-        return `Private Token Transfer Successful!\nToken: ${symbolResult}\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}\nTransfer Function Selector: ${transferSelector}`;
-    } catch (error) {
-        console.error('Error transferring private ERC20 tokens:', error);
-        throw new Error(`Failed to transfer private ERC20 tokens: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
 
 async function performEncryptValue(message: bigint | number | string, contractAddress: string, functionSelector: string) {
     try {
