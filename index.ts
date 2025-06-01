@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
+import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/transferNative.js';
 import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
 import { getAccountKeys, getCurrentAccountKeys } from "./tools/shared/account.js";
 
@@ -610,33 +611,6 @@ const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
             },
         },
         required: ["account_address", "token_address"],
-    },
-};
-
-const TRANSFER_NATIVE_COTI: Tool = {
-    name: "transfer_native",
-    description:
-        "Transfer native COTI tokens to another wallet. " +
-        "This is used for sending COTI tokens from your wallet to another address. " +
-        "Requires recipient address and amount in Wei as input. " +
-        "Returns the transaction hash upon successful transfer.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            recipient_address: {
-                type: "string",
-                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of COTI to transfer (in Wei)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["recipient_address", "amount_wei"],
     },
 };
 
@@ -1524,17 +1498,7 @@ function isGetPrivateERC20TokenBalanceArgs(args: unknown): args is { account_add
     );
 }
 
-function isTransferNativeCotiArgs(args: unknown): args is { recipient_address: string, amount_wei: string, gas_limit?: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "recipient_address" in args &&
-        typeof (args as { recipient_address: string }).recipient_address === "string" &&
-        "amount_wei" in args &&
-        typeof (args as { amount_wei: string }).amount_wei === "string" &&
-        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
-    );
-}
+// isTransferNativeCotiArgs function is now imported from ./tools/transferNativeCoti.js
 
 function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string } {
     return (
@@ -1795,32 +1759,6 @@ async function performGetPrivateERC20TokenBalance(account_address: string, token
     } catch (error) {
         console.error('Error fetching private token balance:', error);
         throw new Error(`Failed to get private token balance: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-async function performTransferNativeCoti(recipient_address: string, amount_wei: string, gas_limit?: string) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        const txOptions: any = {};
-        if (gas_limit) {
-            txOptions.gasLimit = gas_limit;
-        }
-        
-        const tx = await wallet.sendTransaction({
-            to: recipient_address,
-            value: amount_wei,
-            ...txOptions
-        });
-        
-        const receipt = await tx.wait();
-        
-        return `Transaction successful!\nToken: COTI\nTransaction Hash: ${receipt?.hash}\nAmount in Wei: ${amount_wei}\nRecipient: ${recipient_address}`;
-    } catch (error) {
-        console.error('Error transferring COTI tokens:', error);
-        throw new Error(`Failed to transfer COTI tokens: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
@@ -2209,8 +2147,8 @@ async function performChangeDefaultAccount(account_address: string) {
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
         GET_NATIVE_BALANCE, 
+        TRANSFER_NATIVE, 
         GET_PRIVATE_ERC20_TOKEN_BALANCE, 
-        TRANSFER_NATIVE_COTI, 
         TRANSFER_PRIVATE_ERC20_TOKEN, 
         TRANSFER_PRIVATE_ERC721_TOKEN,
         GET_PRIVATE_ERC721_TOKEN_URI,
@@ -2267,12 +2205,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
             
             case "transfer_native": {
-                if (!isTransferNativeCotiArgs(args)) {
+                if (!isTransferNativeArgs(args)) {
                     throw new Error("Invalid arguments for transfer_native");
                 }
                 const { recipient_address, amount_wei, gas_limit } = args;
 
-                const results = await performTransferNativeCoti(recipient_address, amount_wei, gas_limit);
+                const results = await performTransferNative(recipient_address, amount_wei, gas_limit);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
