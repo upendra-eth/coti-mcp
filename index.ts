@@ -7,14 +7,19 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
-import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/transferNative.js';
-import { GET_PRIVATE_ERC20_TOKEN_BALANCE, performGetPrivateERC20TokenBalance, isGetPrivateERC20TokenBalanceArgs } from './tools/getPrivateErc20Balance.js';
 import { buildStringInputText } from '@coti-io/coti-sdk-typescript';
 import { getAccountKeys, getCurrentAccountKeys } from "./tools/shared/account.js";
 import { ERC20_ABI, ERC721_ABI } from "./tools/constants/abis.js";
-import { isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token, TRANSFER_PRIVATE_ERC20_TOKEN } from "./tools/transferPrivateErc20.js";
+
+// Native tools
+import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
+import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/transferNative.js';
+
+// ERC20 tools
+import { GET_PRIVATE_ERC20_TOKEN_BALANCE, performGetPrivateERC20TokenBalance, isGetPrivateERC20TokenBalanceArgs } from './tools/getPrivateErc20Balance.js';
 import { GET_PRIVATE_ERC20_TOTAL_SUPPLY, isGetPrivateERC20TotalSupplyArgs, performGetPrivateERC20TotalSupply } from "./tools/getPrivateErc20TotalSupply.js";
+import { GET_PRIVATE_ERC20_DECIMALS, isGetPrivateERC20DecimalsArgs, performGetPrivateERC20Decimals } from "./tools/getPrivateErc20Decimals.js";
+import { TRANSFER_PRIVATE_ERC20_TOKEN, isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token } from "./tools/transferPrivateErc20.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -110,25 +115,6 @@ const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
             token_address: {
                 type: "string",
                 description: "ERC721 token contract address on COTI blockchain",
-            },
-        },
-        required: ["token_address"],
-    },
-};
-
-const GET_PRIVATE_ERC20_DECIMALS: Tool = {
-    name: "get_private_erc20_decimals",
-    description:
-        "Get the number of decimals for a private ERC20 token on the COTI blockchain. " +
-        "This is used for checking the number of decimals in this token. " +
-        "Requires token contract address as input. " +
-        "Returns the number of decimals in this contract.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
             },
         },
         required: ["token_address"],
@@ -876,17 +862,6 @@ function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { token_addre
     );
 }
 
-
-
-function isGetPrivateERC20DecimalsArgs(args: unknown): args is { token_address: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "token_address" in args &&
-        typeof (args as { token_address: string }).token_address === "string"
-    );
-}
-
 function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, to_address: string, token_uri: string, gas_limit?: string } {
     return (
         typeof args === "object" &&
@@ -1252,28 +1227,6 @@ async function performGetPrivateERC721TotalSupply(token_address: string) {
     } catch (error) {
         console.error('Error getting private ERC721 total supply:', error);
         throw new Error(`Failed to get private ERC721 total supply: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-
-async function performGetPrivateERC20Decimals(token_address: string) {
-    try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const currentAccountKeys = getCurrentAccountKeys();
-        
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        wallet.setAesKey(currentAccountKeys.aesKey);
-        
-        const tokenContract = new Contract(token_address, ERC20_ABI, wallet);
-        
-        const decimals = await tokenContract.decimals();
-        const name = await tokenContract.name();
-        const symbol = await tokenContract.symbol();
-        
-        return `Collection: ${name} (${symbol})\nDecimals: ${decimals}\nToken Address: ${token_address}`;
-    } catch (error) {
-        console.error('Error getting private ERC20 decimals:', error);
-        throw new Error(`Failed to get private ERC20 decimals: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
