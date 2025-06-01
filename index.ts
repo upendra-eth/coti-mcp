@@ -34,6 +34,7 @@ import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/
 import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/decryptValue.js";
 import { CALL_CONTRACT_FUNCTION, isCallContractFunctionArgs, performCallContractFunction } from "./tools/callContractFunction.js";
 import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from "./tools/decodeEventData.js";
+import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -191,25 +192,6 @@ const MINT_PRIVATE_ERC721_TOKEN: Tool = {
     },
 };
 
-const GET_TRANSACTION_STATUS: Tool = {
-    name: "get_transaction_status",
-    description:
-        "Get the status of a transaction on the COTI blockchain. " +
-        "This is used for checking if a transaction has been confirmed, pending, or failed. " +
-        "Requires a transaction hash as input. " +
-        "Returns detailed information about the transaction status.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            transaction_hash: {
-                type: "string",
-                description: "Transaction hash to check status for",
-            }
-        },
-        required: ["transaction_hash"],
-    },
-};
-
 const GET_TRANSACTION_LOGS: Tool = {
     name: "get_transaction_logs",
     description:
@@ -228,52 +210,6 @@ const GET_TRANSACTION_LOGS: Tool = {
         required: ["transaction_hash"],
     },
 };
-
-async function performGetTransactionStatus(transaction_hash: string): Promise<string> {
-    try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const receipt = await provider.getTransactionReceipt(transaction_hash);
-        const tx = await provider.getTransaction(transaction_hash);
-        
-        if (!tx) {
-            return `Transaction Not Found\nTransaction Hash: ${transaction_hash}\nStatus: Unknown (Transaction not found on the blockchain)`;
-        }
-        
-        let status = 'Pending';
-        let gasUsed = 'N/A';
-        let blockNumber = 'N/A';
-        let confirmations = '0';
-        
-        if (receipt) {
-            status = receipt.status ? 'Success' : 'Failed';
-            gasUsed = receipt.gasUsed.toString();
-            blockNumber = receipt.blockNumber.toString();
-            
-            const currentBlock = await provider.getBlockNumber();
-            confirmations = (currentBlock - receipt.blockNumber).toString();
-        }
-        
-        let result = `Transaction Hash: ${transaction_hash}\n\n`;
-        result += `Status: ${status}\n\n`;
-        result += `From: ${tx.from}\n\n`;
-        result += `To: ${tx.to || 'Contract Creation'}\n\n`;
-        result += `Value: ${ethers.formatEther(tx.value)} COTI\n\n`;
-        result += `Gas Price: ${ethers.formatUnits(tx.gasPrice || 0, 'gwei')} Gwei\n\n`;
-        result += `Gas Limit: ${tx.gasLimit.toString()}\n\n`;
-        result += `Gas Used: ${gasUsed}\n\n`;
-        result += `Nonce: ${tx.nonce}\n\n`;
-        result += `Block Number: ${blockNumber}\n\n`;
-        result += `Confirmations: ${confirmations}\n\n`;
-
-        const network = await provider.getNetwork();
-        result += `https://${network.name === 'mainnet' ? 'mainnet' : 'testnet'}.cotiscan.io/tx/${transaction_hash}\n\n`;
-        
-        return result;
-    } catch (error) {
-        console.error('Error getting transaction status:', error);
-        throw new Error(`Failed to get transaction status: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
 
 async function performGetTransactionLogs(transaction_hash: string): Promise<string> {
     try {
@@ -428,15 +364,6 @@ function isDeployPrivateERC721ContractArgs(args: unknown): args is { name: strin
         "symbol" in args &&
         typeof (args as { symbol: string }).symbol === "string" &&
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
-    );
-}
-
-function isGetTransactionStatusArgs(args: unknown): args is { transaction_hash: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "transaction_hash" in args &&
-        typeof (args as any).transaction_hash === "string"
     );
 }
 
