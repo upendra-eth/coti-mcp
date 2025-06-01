@@ -25,6 +25,7 @@ import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPriva
 
 // Account tools
 import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
+import { LIST_ACCOUNTS, performListAccounts } from "./tools/listAccounts.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -242,15 +243,6 @@ const CHANGE_DEFAULT_ACCOUNT: Tool = {
     }
 };
 
-const LIST_ACCOUNTS: Tool = {
-    name: "list_accounts",
-    description: "List all available COTI accounts configured in the environment. Returns the account addresses, current default account, and masked versions of the private and AES keys.",
-    inputSchema: {
-        type: "object",
-        properties: {}
-    }
-};
-
 const GENERATE_AES_KEY: Tool = {
     name: "generate_aes_key",
     description: "Generate a new AES key for the current account. Returns the AES key.",
@@ -363,18 +355,6 @@ const CALL_CONTRACT_FUNCTION: Tool = {
 };
 
 /**
- * Masks a sensitive string by showing only the first 4 and last 4 characters
- * @param str The string to mask
- * @returns The masked string
- */
-function maskSensitiveString(str: string): string {
-    if (!str || str.length <= 8) {
-        return "****";
-    }
-    return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
-}
-
-/**
  * Generates a new AES key for the current account.
  * @param account_address The address of the account to generate the AES key for.
  * @returns The generated AES key.
@@ -420,42 +400,7 @@ async function performGenerateAesKey(account_address: string): Promise<string> {
     }
 }
 
-/**
- * Lists all available COTI accounts configured in the environment.
- * @returns A formatted string with account information.
- */
-async function performListAccounts(): Promise<string> {
-    try {
-        const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
-        const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
-        const aesKeys = (process.env.COTI_MCP_AES_KEY || '').split(',').filter(Boolean);
-        const currentAccount = process.env.COTI_MCP_CURRENT_PUBLIC_KEY || publicKeys[0] || '';
-        
-        if (publicKeys.length === 0) {
-            return "No COTI accounts configured in the environment.";
-        }
-        
-        let result = "Available COTI Accounts:\n\n";
-        result += "======================\n\n";
-        
-        for (let i = 0; i < publicKeys.length; i++) {
-            const publicKey = publicKeys[i];
-            const privateKey = privateKeys[i] ? maskSensitiveString(privateKeys[i]) : "Not available";
-            const aesKey = aesKeys[i] ? maskSensitiveString(aesKeys[i]) : "Not available";
-            const isDefault = publicKey === currentAccount ? " (DEFAULT)" : "";
-            
-            result += `Account ${i + 1}${isDefault}:\n\n`;
-            result += `Address: ${publicKey}\n\n`;
-            result += `Private Key: ${privateKey}\n\n`;
-            result += `AES Key: ${aesKey}\n\n`;
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('Error listing accounts:', error);
-        throw new Error(`Failed to list accounts: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
+
 
 async function performGetTransactionStatus(transaction_hash: string): Promise<string> {
     try {
