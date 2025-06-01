@@ -27,6 +27,7 @@ import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPriva
 import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
 import { LIST_ACCOUNTS, performListAccounts } from "./tools/listAccounts.js";
 import { CHANGE_DEFAULT_ACCOUNT, isChangeDefaultAccountArgs, performChangeDefaultAccount } from "./tools/changeDefaultAccount.js";
+import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from "./tools/generateAesKey.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -229,20 +230,6 @@ const DECRYPT_VALUE: Tool = {
     },
 };
 
-const GENERATE_AES_KEY: Tool = {
-    name: "generate_aes_key",
-    description: "Generate a new AES key for the current account. Returns the AES key.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "The address of the account to generate the AES key for."
-            }
-        }
-    }
-};
-
 const GET_TRANSACTION_STATUS: Tool = {
     name: "get_transaction_status",
     description:
@@ -339,54 +326,6 @@ const CALL_CONTRACT_FUNCTION: Tool = {
         required: ["contract_address", "function_name", "function_args"],
     },
 };
-
-/**
- * Generates a new AES key for the current account.
- * @param account_address The address of the account to generate the AES key for.
- * @returns The generated AES key.
- */
-async function performGenerateAesKey(account_address: string): Promise<string> {
-    try {
-        const currentAccountKeys = getAccountKeys(account_address);
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-
-        await wallet.generateOrRecoverAes();
-
-        const aesKey = wallet.getUserOnboardInfo()?.aesKey;
-
-        if (aesKey !== null && typeof aesKey !== 'string') {
-            throw new Error('AES key is not a string');
-        }
-
-        if (!aesKey) {
-            throw new Error('Failed to generate AES key');
-        }
-
-        // set the aes key for the account
-        const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
-        const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
-        const aesKeys = (process.env.COTI_MCP_AES_KEY || '').split(',').filter(Boolean);
-
-        const addressIndex = publicKeys.findIndex(key => key.toLowerCase() === account_address.toLowerCase());
-
-        if (addressIndex === -1 || !privateKeys[addressIndex] || !aesKeys[addressIndex]) {
-            throw new Error(`No keys found for account: ${account_address}`);
-        }
-
-        aesKeys[addressIndex] = aesKey;
-
-        process.env.COTI_MCP_AES_KEY = aesKeys.join(',');
-
-        return "AES key: " + aesKey + "\n\n" +
-               "Address: " + wallet.address;
-    } catch (error) {
-        console.error('Error generating AES key:', error);
-        throw new Error(`Failed to generate AES key: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-
 
 async function performGetTransactionStatus(transaction_hash: string): Promise<string> {
     try {
@@ -731,14 +670,6 @@ function isDeployPrivateERC721ContractArgs(args: unknown): args is { name: strin
         "symbol" in args &&
         typeof (args as { symbol: string }).symbol === "string" &&
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
-    );
-}
-
-function isGenerateAesKeyArgs(args: unknown): args is { account_address: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        typeof (args as { account_address: string }).account_address === "string"
     );
 }
 
