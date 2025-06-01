@@ -7,7 +7,8 @@ import {
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { buildInputText, buildStringInputText, ctUint, decryptUint, decryptString } from '@coti-io/coti-sdk-typescript';
+import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
+import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
 
 interface AccountKeys {
     privateKey: string;
@@ -620,25 +621,6 @@ const ERC721_ABI = [
     type: "event"
 },
 ];
-
-const GET_COTI_NATIVE_BALANCE: Tool = {
-    name: "get_native_balance",
-    description:
-        "Get the native COTI token balance of a COTI blockchain account. " +
-        "This is used for checking the current balance of a COTI account. " +
-        "Requires a COTI account address as input. " +
-        "Returns the account balance in COTI tokens.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            }
-        },
-        required: ["account_address"],
-    },
-};
 
 const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
     name: "get_private_erc20_balance",
@@ -1806,21 +1788,6 @@ function isCallContractFunctionArgs(args: unknown): args is { contract_address: 
     );
 }
 
-async function performGetCotiBalance(account_address: string) {
-    try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        
-        const balanceWei = await provider.getBalance(account_address);
-        const formattedBalance = ethers.formatUnits(balanceWei, 18);
-        
-        return `Balance: ${formattedBalance} COTI`;
-
-    } catch (error) {
-        console.error('Error fetching COTI balance:', error);
-        throw new Error(`Failed to get COTI balance: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
 export const decryptBalance = (balance: ctUint, AESkey: string) => {
     try {
       return decryptUint(balance, AESkey);
@@ -2273,7 +2240,7 @@ async function performChangeDefaultAccount(account_address: string) {
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
-        GET_COTI_NATIVE_BALANCE, 
+        GET_NATIVE_BALANCE, 
         GET_PRIVATE_ERC20_TOKEN_BALANCE, 
         TRANSFER_NATIVE_COTI, 
         TRANSFER_PRIVATE_ERC20_TOKEN, 
@@ -2306,12 +2273,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         switch (name) {
             case "get_native_balance": {
-                if (!isGetCotiBalanceArgs(args)) {
+                if (!isGetNativeBalanceArgs(args)) {
                     throw new Error("Invalid arguments for get_native_balance");
                 }
                 const { account_address } = args;
 
-                const results = await performGetCotiBalance(account_address);
+                const results = await performGetNativeBalance(account_address);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
