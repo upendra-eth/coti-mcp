@@ -6,8 +6,8 @@ import {
     ListToolsRequestSchema,
     Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers, TransactionReceipt } from '@coti-io/coti-ethers';
-import { buildInputText, buildStringInputText, ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
+import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
+import { buildInputText, buildStringInputText, ctUint, decryptUint, decryptString } from '@coti-io/coti-sdk-typescript';
 
 interface AccountKeys {
     privateKey: string;
@@ -153,6 +153,72 @@ const ERC20_ABI = [
     outputs: [{ name: "", type: "bool" }],
     stateMutability: "nonpayable",
     type: "function"
+  },
+
+  // Transfer event
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address"
+      },
+      {
+        indexed: false,
+        internalType: "ctUint64",
+        name: "senderValue",
+        type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "ctUint64",
+        name: "receiverValue",
+        type: "uint256"
+      }
+    ],
+    name: "Transfer",
+    type: "event"
+  },
+
+  // Approval event
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "owner",
+        type: "address"
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "spender",
+        type: "address"
+      },
+      {
+        indexed: false,
+        internalType: "ctUint64",
+        name: "ownerValue",
+        type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "ctUint64",
+        name: "spenderValue",
+        type: "uint256"
+      }
+    ],
+    name: "Approval",
+    type: "event"
   },
   
   // Transfer functions
@@ -444,6 +510,114 @@ const ERC721_ABI = [
     ],
     stateMutability: "view",
     type: "function"
+},
+// events
+{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: true,
+            internalType: "address",
+            name: "owner",
+            type: "address"
+        },
+        {
+            indexed: true,
+            internalType: "address",
+            name: "approved",
+            type: "address"
+        },
+        {
+            indexed: true,
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256"
+        }
+    ],
+    name: "Approval",
+    type: "event"
+},
+{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: true,
+            internalType: "address",
+            name: "owner",
+            type: "address"
+        },
+        {
+            indexed: true,
+            internalType: "address",
+            name: "operator",
+            type: "address"
+        },
+        {
+            indexed: false,
+            internalType: "bool",
+            name: "approved",
+            type: "bool"
+        }
+    ],
+    name: "ApprovalForAll",
+    type: "event"
+},
+{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: false,
+            internalType: "uint256",
+            name: "_fromTokenId",
+            type: "uint256"
+        },
+        {
+            indexed: false,
+            internalType: "uint256",
+            name: "_toTokenId",
+            type: "uint256"
+        }
+    ],
+    name: "BatchMetadataUpdate",
+    type: "event"
+},
+{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: false,
+            internalType: "uint256",
+            name: "_tokenId",
+            type: "uint256"
+        }
+    ],
+    name: "MetadataUpdate",
+    type: "event"
+},
+{
+    anonymous: false,
+    inputs: [
+        {
+            indexed: true,
+            internalType: "address",
+            name: "from",
+            type: "address"
+        },
+        {
+            indexed: true,
+            internalType: "address",
+            name: "to",
+            type: "address"
+        },
+        {
+            indexed: true,
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256"
+        }
+    ],
+    name: "Transfer",
+    type: "event"
 },
 ];
 
@@ -913,6 +1087,84 @@ const GET_TRANSACTION_STATUS: Tool = {
     },
 };
 
+const GET_TRANSACTION_LOGS: Tool = {
+    name: "get_transaction_logs",
+    description:
+        "Get the logs from a transaction on the COTI blockchain. " +
+        "This is used for retrieving event logs emitted during transaction execution. " +
+        "Requires a transaction hash as input. " +
+        "Returns detailed information about the transaction logs including event names, topics, and data.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            transaction_hash: {
+                type: "string",
+                description: "Transaction hash to get logs for",
+            }
+        },
+        required: ["transaction_hash"],
+    },
+};
+
+const DECODE_EVENT_DATA: Tool = {
+    name: "decode_event_data",
+    description: "Decode event data from a transaction log based on the event signature. This helps interpret the raw data in transaction logs by matching the event signature to known event types and decoding the parameters. Requires event signature, topics, and data from a transaction log.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            topics: {
+                type: "array",
+                items: {
+                    type: "string"
+                },
+                description: "Array of topics from the transaction log",
+            },
+            data: {
+                type: "string",
+                description: "Data field from the transaction log",
+            },
+            abi: {
+                type: "string",
+                description: "Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs.",
+            },
+        },
+        required: ["topics", "data"],
+    },
+};
+
+const CALL_CONTRACT_FUNCTION: Tool = {
+    name: "call_contract_function",
+    description:
+        "Call a read-only function on any smart contract on the COTI blockchain. " +
+        "This allows retrieving data from any contract by specifying the contract address, function name, and parameters. " +
+        "Returns the function result in a human-readable format.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            contract_address: {
+                type: "string",
+                description: "Address of the smart contract to call",
+            },
+            function_name: {
+                type: "string",
+                description: "Name of the function to call on the contract",
+            },
+            function_args: {
+                type: "array",
+                description: "Array of arguments to pass to the function (can be empty if function takes no arguments)",
+                items: {
+                    type: "string"
+                }
+            },
+            abi: {
+                type: "string",
+                description: "Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs.",
+            },
+        },
+        required: ["contract_address", "function_name", "function_args"],
+    },
+};
+
 /**
  * Masks a sensitive string by showing only the first 4 and last 4 characters
  * @param str The string to mask
@@ -1093,6 +1345,182 @@ async function performGetTransactionStatus(transaction_hash: string): Promise<st
     } catch (error) {
         console.error('Error getting transaction status:', error);
         throw new Error(`Failed to get transaction status: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performDecodeEventData(topics: string[], data: string, abi?: string): Promise<string> {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const currentAccountKeys = getCurrentAccountKeys();
+        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
+        const standardAbis = [...ERC20_ABI, ...ERC721_ABI];
+        
+        const iface = new ethers.Interface(abi || standardAbis);
+        const decodedData = iface.parseLog({
+            topics: topics,
+            data: data
+        });
+        
+        let result = "Event Decoding Results:\n\n";
+        result += "Decoded Data:\n\n";
+        
+        if (!decodedData) {
+            return "No decoded data found.";
+        }
+
+        result += `Event Name: ${decodedData.name}\n\n`;
+        result += `Event Signature: ${decodedData.signature}\n\n`;
+        result += `Event Topic: ${decodedData.topic}\n\n`;
+
+        for (let index = 0; index < decodedData.fragment.inputs.length; index++) {
+            const input = decodedData.fragment.inputs[index];
+            const value = decodedData.args[index];
+        
+            result += `Input ${index}, Name: ${input.name}, Type: ${input.type}, Value: ${value}\n\n`;
+        
+            try {
+                const decryptedValue = await wallet.decryptValue(value);
+                result += `Decrypted Value: ${decryptedValue}\n\n`;
+            } catch (error) {
+                result += `Decrypted Value: [decryption failed or not applicable]\n\n`;
+            }
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Error decoding event data:', error);
+        throw new Error(`Failed to decode event data: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performGetTransactionLogs(transaction_hash: string): Promise<string> {
+    try {
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        let receipt;
+        try {
+            receipt = await provider.getTransactionReceipt(transaction_hash);
+        } catch (error) {
+            return `Transaction Not Found or Pending\nTransaction Hash: ${transaction_hash}\nStatus: No logs available (Transaction may be pending or not found)`;
+        }
+
+        if (!receipt) {
+            return `Transaction Not Found or Pending\nTransaction Hash: ${transaction_hash}\nStatus: No logs available (Transaction may be pending or not found)`;
+        }
+
+        const logs = receipt.logs;
+        
+        if (!logs || logs.length === 0) {
+            return `Transaction Hash: ${transaction_hash}\n\nNo logs found for this transaction.`;
+        }
+        
+        let result = `Transaction Hash: ${transaction_hash}\n\n`;
+        result += `Total Logs: ${logs.length}\n\n`;
+        
+        logs.forEach((log, index) => {
+            result += `Log #${index + 1}:\n`;
+            result += `  Address: ${log.address}\n`;
+            result += `  Block Number: ${log.blockNumber}\n`;
+            result += `  Transaction Index: ${log.transactionIndex}\n`;
+            result += `  Log Index: ${log.index !== undefined ? log.index : 'N/A'}\n`;
+            result += `  Removed: ${log.removed !== undefined ? log.removed : 'false'}\n`;
+            
+            result += `  Topics (${log.topics.length}):\n`;
+            log.topics.forEach((topic, topicIndex) => {
+                result += `    Topic ${topicIndex}: ${topic}\n`;
+            });
+
+            result += `  Data: ${log.data}\n\n`;
+            
+            if (log.topics.length > 0) {
+                const eventSignature = log.topics[0];
+                result += `  Event Signature: ${eventSignature}\n\n`;
+            }
+        });
+        
+        const network = await provider.getNetwork();
+        result += `View on Explorer: https://${network.name === 'mainnet' ? 'mainnet' : 'testnet'}.cotiscan.io/tx/${transaction_hash}\n`;
+        
+        return result;
+    } catch (error) {
+        console.error('Error getting transaction logs:', error);
+        throw new Error(`Failed to get transaction logs: ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function performCallContractFunction(contract_address: string, function_name: string, function_args: string[], abi?: string): Promise<string> {
+    try {
+        const currentAccountKeys = getCurrentAccountKeys();
+        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
+        
+        wallet.setAesKey(currentAccountKeys.aesKey);
+        
+        let contractAbi;
+        if (abi) {
+            try {
+                contractAbi = JSON.parse(abi);
+            } catch (e) {
+                throw new Error(`Invalid ABI format: ${e instanceof Error ? e.message : String(e)}`);
+            }
+        } else {
+            try {
+                const tempContract = new Contract(contract_address, ERC20_ABI, wallet);
+                await tempContract.decimals();
+                contractAbi = ERC20_ABI;
+            } catch (e) {
+                try {
+                    const tempContract = new Contract(contract_address, ERC721_ABI, wallet);
+                    await tempContract.ownerOf(1);
+                    contractAbi = ERC721_ABI;
+                } catch (e2) {
+                    throw new Error('Could not determine contract type. Please provide the ABI.');
+                }
+            }
+        }
+        
+        const contract = new Contract(contract_address, contractAbi, wallet);
+        
+        if (!contract[function_name]) {
+            throw new Error(`Function '${function_name}' not found in contract. Check the function name or provide a custom ABI.`);
+        }
+        
+        const processedArgs = function_args.map(arg => {
+            if (arg.toLowerCase() === 'true') return true;
+            if (arg.toLowerCase() === 'false') return false;
+            if (arg.match(/^0x[0-9a-fA-F]{40}$/)) return arg;
+            if (arg.match(/^-?\d+$/)) return BigInt(arg);
+            if (arg.match(/^-?\d+\.\d+$/)) return parseFloat(arg);
+            return arg;
+        });
+        
+        const result = await contract[function_name](...processedArgs);
+        
+        let formattedResult: string;
+        if (typeof result === 'object' && result !== null) {
+            const replacer = (key: string, value: any) => {
+                if (typeof value === 'bigint') {
+                    return value.toString();
+                }
+                return value;
+            };
+            
+            if (Array.isArray(result)) {
+                formattedResult = JSON.stringify(result, replacer, 2);
+            } else if (result._isBigNumber || typeof result.toString === 'function') {
+                formattedResult = result.toString();
+            } else {
+                formattedResult = JSON.stringify(result, replacer, 2);
+            }
+        } else if (typeof result === 'bigint') {
+            formattedResult = result.toString();
+        } else {
+            formattedResult = String(result);
+        }
+        
+        return `Function Call Successful!\n\nContract: ${contract_address}\n\nFunction: ${function_name}\n\nArguments: ${JSON.stringify(processedArgs)}\n\nResult: ${formattedResult}`;
+    } catch (error) {
+        console.error('Error calling contract function:', error);
+        throw new Error(`Failed to call contract function: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
@@ -1331,7 +1759,6 @@ function isGenerateAesKeyArgs(args: unknown): args is { account_address: string 
     return (
         typeof args === "object" &&
         args !== null &&
-        "account_address" in args &&
         typeof (args as { account_address: string }).account_address === "string"
     );
 }
@@ -1341,7 +1768,41 @@ function isGetTransactionStatusArgs(args: unknown): args is { transaction_hash: 
         typeof args === "object" &&
         args !== null &&
         "transaction_hash" in args &&
-        typeof (args as { transaction_hash: string }).transaction_hash === "string"
+        typeof (args as any).transaction_hash === "string"
+    );
+}
+
+function isGetTransactionLogsArgs(args: unknown): args is { transaction_hash: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "transaction_hash" in args &&
+        typeof (args as any).transaction_hash === "string"
+    );
+}
+
+function isDecodeEventDataArgs(args: unknown): args is { topics: string[]; data: string; abi?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "topics" in args &&
+        Array.isArray((args as { topics: string[] }).topics) &&
+        "data" in args &&
+        typeof (args as { data: string }).data === "string" &&
+        (!("abi" in args) || typeof (args as { abi: string }).abi === "string")
+    );
+}
+
+function isCallContractFunctionArgs(args: unknown): args is { contract_address: string, function_name: string, function_args: string[], abi?: string } {
+    return (
+        typeof args === "object" &&
+        args !== null &&
+        "contract_address" in args &&
+        typeof (args as { contract_address: string }).contract_address === "string" &&
+        "function_name" in args &&
+        typeof (args as { function_name: string }).function_name === "string" &&
+        "function_args" in args &&
+        Array.isArray((args as { function_args: string[] }).function_args)
     );
 }
 
@@ -1832,6 +2293,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CREATE_ACCOUNT,
         GENERATE_AES_KEY,
         GET_TRANSACTION_STATUS,
+        GET_TRANSACTION_LOGS,
+        DECODE_EVENT_DATA,
+        CALL_CONTRACT_FUNCTION,
         LIST_ACCOUNTS
     ],
 }));
@@ -2109,6 +2573,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const { transaction_hash } = args;
 
                 const results = await performGetTransactionStatus(transaction_hash);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "get_transaction_logs": {
+                if (!isGetTransactionLogsArgs(args)) {
+                    throw new Error("Invalid arguments for get_transaction_logs");
+                }
+                const { transaction_hash } = args;
+
+                const results = await performGetTransactionLogs(transaction_hash);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "decode_event_data": {
+                if (!isDecodeEventDataArgs(args)) {
+                    throw new Error("Invalid arguments for decode_event_data");
+                }
+                const { topics, data, abi } = args;
+
+                const results = await performDecodeEventData(topics, data, abi);
+                return {
+                    content: [{ type: "text", text: results }],
+                    isError: false,
+                };
+            }
+            
+            case "call_contract_function": {
+                if (!isCallContractFunctionArgs(args)) {
+                    throw new Error("Invalid arguments for call_contract_function");
+                }
+                const { contract_address, function_name, function_args, abi } = args;
+
+                const results = await performCallContractFunction(contract_address, function_name, function_args, abi);
                 return {
                     content: [{ type: "text", text: results }],
                     isError: false,
