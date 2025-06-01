@@ -8,7 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { buildStringInputText } from '@coti-io/coti-sdk-typescript';
-import { getAccountKeys, getCurrentAccountKeys } from "./tools/shared/account.js";
+import { getCurrentAccountKeys } from "./tools/shared/account.js";
 import { ERC20_ABI, ERC721_ABI } from "./tools/constants/abis.js";
 
 // Native tools
@@ -28,6 +28,9 @@ import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./too
 import { LIST_ACCOUNTS, performListAccounts } from "./tools/listAccounts.js";
 import { CHANGE_DEFAULT_ACCOUNT, isChangeDefaultAccountArgs, performChangeDefaultAccount } from "./tools/changeDefaultAccount.js";
 import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from "./tools/generateAesKey.js";
+
+// Encryption tools
+import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/encryptValue.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -182,33 +185,6 @@ const MINT_PRIVATE_ERC721_TOKEN: Tool = {
             },
         },
         required: ["token_address", "to_address", "token_uri"],
-    },
-};
-
-const ENCRYPT_VALUE: Tool = {
-    name: "encrypt_value",
-    description:
-        "Encrypt a value using the COTI AES key. " +
-        "This is used for encrypting values to be sent to another address. " +
-        "Requires a value, contract address, and function selector as input. " +
-        "Returns the signature.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            message: {
-                type: "string",
-                description: "Message to encrypt",
-            },
-            contract_address: {
-                type: "string",
-                description: "Contract address",
-            },
-            function_selector: {
-                type: "string",
-                description: "Function selector. To get the function selector, use the keccak256 hash of the function signature. For instance, for the transfer function of an ERC20 token, the function selector is '0xa9059cbb'.",
-            },
-        },
-        required: ["message", "contract_address", "function_selector"],
     },
 };
 
@@ -639,19 +615,6 @@ function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: s
     );
 }
 
-function isEncryptValueArgs(args: unknown): args is { message: string, contract_address: string, function_selector: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "message" in args &&
-        typeof (args as { message: string }).message === "string" &&
-        "contract_address" in args &&
-        typeof (args as { contract_address: string }).contract_address === "string" &&
-        "function_selector" in args &&
-        typeof (args as { function_selector: string }).function_selector === "string"
-    );
-}
-
 function isDecryptValueArgs(args: unknown): args is { ciphertext: string } {
     return (
         typeof args === "object" &&
@@ -714,26 +677,6 @@ function isCallContractFunctionArgs(args: unknown): args is { contract_address: 
         "function_args" in args &&
         Array.isArray((args as { function_args: string[] }).function_args)
     );
-}
-
-
-
-async function performEncryptValue(message: bigint | number | string, contractAddress: string, functionSelector: string) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        const encryptedMessage = await wallet.encryptValue(message, contractAddress, functionSelector);
-        
-        const encryptedMessageString = typeof encryptedMessage === 'object' ? 
-            encryptedMessage.toString() : String(encryptedMessage);
-        
-        return `Encrypted Message: ${encryptedMessageString}`;
-    } catch (error) {
-        console.error('Error encrypting message:', error);
-        throw new Error(`Failed to encrypt message: ${error instanceof Error ? error.message : String(error)}`);
-    }
 }
 
 async function performDecryptValue(ciphertext: bigint) {
