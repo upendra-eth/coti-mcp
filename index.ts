@@ -31,6 +31,7 @@ import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from ".
 
 // Encryption tools
 import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/encryptValue.js";
+import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/decryptValue.js";
 
 const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
     name: "transfer_private_erc721",
@@ -185,24 +186,6 @@ const MINT_PRIVATE_ERC721_TOKEN: Tool = {
             },
         },
         required: ["token_address", "to_address", "token_uri"],
-    },
-};
-
-const DECRYPT_VALUE: Tool = {
-    name: "decrypt_value",
-    description:
-        "Decrypt a value using the COTI AES key. " +
-        "Requires a ciphertext as input. " +
-        "Returns the decrypted value.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            ciphertext: {
-                type: "string",
-                description: "Ciphertext to decrypt",
-            },
-        },
-        required: ["ciphertext"],
     },
 };
 
@@ -615,15 +598,6 @@ function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: s
     );
 }
 
-function isDecryptValueArgs(args: unknown): args is { ciphertext: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "ciphertext" in args &&
-        typeof (args as { ciphertext: string }).ciphertext === "string"
-    );
-}
-
 function isDeployPrivateERC721ContractArgs(args: unknown): args is { name: string, symbol: string, gas_limit?: string } {
     return (
         typeof args === "object" &&
@@ -677,21 +651,6 @@ function isCallContractFunctionArgs(args: unknown): args is { contract_address: 
         "function_args" in args &&
         Array.isArray((args as { function_args: string[] }).function_args)
     );
-}
-
-async function performDecryptValue(ciphertext: bigint) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        const decryptedMessage = await wallet.decryptValue(ciphertext);
-        
-        return `Decrypted Message: ${decryptedMessage}`;
-    } catch (error) {
-        console.error('Error decrypting message:', error);
-        throw new Error(`Failed to decrypt message: ${error instanceof Error ? error.message : String(error)}`);
-    }
 }
 
 async function performTransferPrivateERC721Token(token_address: string, recipient_address: string, token_id: string, use_safe_transfer: boolean = false, gas_limit?: string) {
