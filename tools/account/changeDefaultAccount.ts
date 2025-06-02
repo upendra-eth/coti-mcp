@@ -1,5 +1,5 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getAccountKeys } from "./shared/account.js";
+import { getAccountKeys } from "../shared/account.js";
 
 export const CHANGE_DEFAULT_ACCOUNT: Tool = {
     name: "change_default_account",

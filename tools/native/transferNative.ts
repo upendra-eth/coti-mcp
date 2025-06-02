@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet } from '@coti-io/coti-ethers';
-import { getCurrentAccountKeys } from "./shared/account.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
 
 export const TRANSFER_NATIVE: Tool = {
     name: "transfer_native",

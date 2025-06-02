@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
-import { getAccountKeys } from "./shared/account.js";
+import { getAccountKeys } from "../shared/account.js";
 
 export const GENERATE_AES_KEY: Tool = {
     name: "generate_aes_key",

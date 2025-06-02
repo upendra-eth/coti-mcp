@@ -1,8 +1,8 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { CotiNetwork, getDefaultProvider, Wallet, Contract } from '@coti-io/coti-ethers';
 import { buildInputText } from '@coti-io/coti-sdk-typescript';
-import { getCurrentAccountKeys } from "./shared/account.js";
-import { ERC20_ABI } from "./constants/abis.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
+import { ERC20_ABI } from "../constants/abis.js";
 
 /**
  * Tool definition for transferring private ERC20 tokens on the COTI blockchain

@@ -1,8 +1,8 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, CotiNetwork, Wallet, Contract } from "@coti-io/coti-ethers";
 import { buildStringInputText } from "@coti-io/coti-sdk-typescript";
-import { ERC721_ABI } from "./constants/abis.js";
-import { getCurrentAccountKeys } from "./shared/account.js";
+import { ERC721_ABI } from "../constants/abis.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
 
 export const MINT_PRIVATE_ERC721_TOKEN: Tool = {
     name: "mint_private_erc721_token",

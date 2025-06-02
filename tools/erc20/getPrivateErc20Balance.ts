@@ -1,8 +1,8 @@
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
-import { getCurrentAccountKeys } from "./shared/account.js";
-import { ERC20_ABI } from "./constants/abis.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
+import { ERC20_ABI } from "../constants/abis.js";
 
 export const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
     name: "get_private_erc20_balance",

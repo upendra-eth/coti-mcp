@@ -7,40 +7,40 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 // Native tools
-import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
-import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/transferNative.js';
+import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/native/getNativeBalance.js';
+import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/native/transferNative.js';
 
 // ERC20 tools
-import { GET_PRIVATE_ERC20_TOKEN_BALANCE, isGetPrivateERC20TokenBalanceArgs, performGetPrivateERC20TokenBalance } from './tools/getPrivateErc20Balance.js';
-import { GET_PRIVATE_ERC20_TOTAL_SUPPLY, isGetPrivateERC20TotalSupplyArgs, performGetPrivateERC20TotalSupply } from "./tools/getPrivateErc20TotalSupply.js";
-import { GET_PRIVATE_ERC20_DECIMALS, isGetPrivateERC20DecimalsArgs, performGetPrivateERC20Decimals } from "./tools/getPrivateErc20Decimals.js";
-import { TRANSFER_PRIVATE_ERC20_TOKEN, isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token } from "./tools/transferPrivateErc20.js";
-import { DEPLOY_PRIVATE_ERC20_CONTRACT, isDeployPrivateERC20ContractArgs, performDeployPrivateERC20Contract } from "./tools/deployPrivateErc20Contract.js";
-import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPrivateERC20Token } from "./tools/mintPrivateErc20Token.js";
+import { GET_PRIVATE_ERC20_TOKEN_BALANCE, isGetPrivateERC20TokenBalanceArgs, performGetPrivateERC20TokenBalance } from './tools/erc20/getPrivateErc20Balance.js';
+import { GET_PRIVATE_ERC20_TOTAL_SUPPLY, isGetPrivateERC20TotalSupplyArgs, performGetPrivateERC20TotalSupply } from "./tools/erc20/getPrivateErc20TotalSupply.js";
+import { GET_PRIVATE_ERC20_DECIMALS, isGetPrivateERC20DecimalsArgs, performGetPrivateERC20Decimals } from "./tools/erc20/getPrivateErc20Decimals.js";
+import { TRANSFER_PRIVATE_ERC20_TOKEN, isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token } from "./tools/erc20/transferPrivateErc20.js";
+import { DEPLOY_PRIVATE_ERC20_CONTRACT, isDeployPrivateERC20ContractArgs, performDeployPrivateERC20Contract } from "./tools/erc20/deployPrivateErc20Contract.js";
+import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPrivateERC20Token } from "./tools/erc20/mintPrivateErc20Token.js";
 
 // ERC721 tools
-import { TRANSFER_PRIVATE_ERC721_TOKEN, isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token } from "./tools/transferPrivateErc721.js";
-import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGetPrivateERC721TokenURI } from "./tools/getPrivateErc721TokenUri.js";
-import { GET_PRIVATE_ERC721_TOKEN_OWNER, isGetPrivateERC721TokenOwnerArgs, performGetPrivateERC721TokenOwner } from "./tools/getPrivateErc721TokenOwner.js";
-import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, isGetPrivateERC721TotalSupplyArgs, performGetPrivateERC721TotalSupply } from "./tools/getPrivateErc721TotalSupply.js";
-import { DEPLOY_PRIVATE_ERC721_CONTRACT, isDeployPrivateERC721ContractArgs, performDeployPrivateERC721Contract } from "./tools/deployPrivateErc721Contract.js";
-import { isMintPrivateERC721TokenArgs, MINT_PRIVATE_ERC721_TOKEN, performMintPrivateERC721Token } from "./tools/mintPrivateErc721Token.js";
+import { TRANSFER_PRIVATE_ERC721_TOKEN, isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token } from "./tools/erc721/transferPrivateErc721.js";
+import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGetPrivateERC721TokenURI } from "./tools/erc721/getPrivateErc721TokenUri.js";
+import { GET_PRIVATE_ERC721_TOKEN_OWNER, isGetPrivateERC721TokenOwnerArgs, performGetPrivateERC721TokenOwner } from "./tools/erc721/getPrivateErc721TokenOwner.js";
+import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, isGetPrivateERC721TotalSupplyArgs, performGetPrivateERC721TotalSupply } from "./tools/erc721/getPrivateErc721TotalSupply.js";
+import { DEPLOY_PRIVATE_ERC721_CONTRACT, isDeployPrivateERC721ContractArgs, performDeployPrivateERC721Contract } from "./tools/erc721/deployPrivateErc721Contract.js";
+import { MINT_PRIVATE_ERC721_TOKEN, isMintPrivateERC721TokenArgs, performMintPrivateERC721Token } from "./tools/erc721/mintPrivateErc721Token.js";
 
 // Account tools
-import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
-import { LIST_ACCOUNTS, performListAccounts } from "./tools/listAccounts.js";
-import { CHANGE_DEFAULT_ACCOUNT, isChangeDefaultAccountArgs, performChangeDefaultAccount } from "./tools/changeDefaultAccount.js";
-import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from "./tools/generateAesKey.js";
+import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/account/createAccount.js";
+import { LIST_ACCOUNTS, performListAccounts } from "./tools/account/listAccounts.js";
+import { CHANGE_DEFAULT_ACCOUNT, isChangeDefaultAccountArgs, performChangeDefaultAccount } from "./tools/account/changeDefaultAccount.js";
+import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from "./tools/account/generateAesKey.js";
 
 // Encryption tools
-import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/encryptValue.js";
-import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/decryptValue.js";
-import { CALL_CONTRACT_FUNCTION, isCallContractFunctionArgs, performCallContractFunction } from "./tools/callContractFunction.js";
-import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from "./tools/decodeEventData.js";
+import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/account/encryptValue.js";
+import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/account/decryptValue.js";
 
 // Transaction tools
-import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
-import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/getTransactionLogs.js";
+import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/transaction/getTransactionStatus.js";
+import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/transaction/getTransactionLogs.js";
+import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from "./tools/transaction/decodeEventData.js";
+import { CALL_CONTRACT_FUNCTION, isCallContractFunctionArgs, performCallContractFunction } from "./tools/transaction/callContractFunction.js";
 
 const server = new Server(
     {

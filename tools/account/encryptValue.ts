@@ -1,5 +1,5 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "./shared/account.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
 import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
 
 export const ENCRYPT_VALUE: Tool = {

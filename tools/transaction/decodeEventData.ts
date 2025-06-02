@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "./shared/account.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
 import { getDefaultProvider, Wallet, ethers, CotiNetwork } from "@coti-io/coti-ethers";
-import { ERC20_ABI, ERC721_ABI } from "./constants/abis.js";
+import { ERC20_ABI, ERC721_ABI } from "../constants/abis.js";
 
 export const DECODE_EVENT_DATA: Tool = {
     name: "decode_event_data",

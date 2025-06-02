@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, CotiNetwork, Wallet, Contract } from "@coti-io/coti-ethers";
-import { ERC721_ABI } from "./constants/abis.js";
-import { getCurrentAccountKeys } from "./shared/account.js";
+import { ERC721_ABI } from "../constants/abis.js";
+import { getCurrentAccountKeys } from "../shared/account.js";
 
 export const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
     name: "get_private_erc721_total_supply",
