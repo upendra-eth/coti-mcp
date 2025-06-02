@@ -19,6 +19,24 @@ export const GET_NATIVE_BALANCE: Tool = {
 
 /**
  * Gets the native COTI token balance of a COTI blockchain account
+ * @param args The arguments to get the balance for
+ * @returns The native COTI token balance of the account
+ */
+export async function getNativeBalanceHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetNativeBalanceArgs(args)) {
+        throw new Error("Invalid arguments for get_native_balance");
+    }
+    const { account_address } = args;
+
+    const results = await performGetNativeBalance(account_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
+ * Gets the native COTI token balance of a COTI blockchain account
  * @param account_address The COTI account address to get the balance for
  * @returns The native COTI token balance of the account
  */

@@ -7,7 +7,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 // Native tools
-import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/native/getNativeBalance.js';
+import { GET_NATIVE_BALANCE, getNativeBalanceHandler } from './tools/native/getNativeBalance.js';
 import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/native/transferNative.js';
 
 // ERC20 tools
@@ -107,16 +107,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         switch (name) {
             case "get_native_balance": {
-                if (!isGetNativeBalanceArgs(args)) {
-                    throw new Error("Invalid arguments for get_native_balance");
-                }
-                const { account_address } = args;
-
-                const results = await performGetNativeBalance(account_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getNativeBalanceHandler(args);
             }
             
             case "get_private_erc20_balance": {
@@ -436,6 +427,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             isError: true,
         };
     }
+
+
 });
 
 async function runServer() {
