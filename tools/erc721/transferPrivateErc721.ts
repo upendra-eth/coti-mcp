@@ -60,6 +60,24 @@ export function isTransferPrivateERC721TokenArgs(args: unknown): args is { token
 }
 
 /**
+ * Handler for the transferPrivateERC721 tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function transferPrivateERC721TokenHandler(args: Record<string, unknown> | undefined) {
+    if (!isTransferPrivateERC721TokenArgs(args)) {
+        throw new Error("Invalid arguments for transfer_private_erc721");
+    }
+    const { token_address, recipient_address, token_id, use_safe_transfer = false, gas_limit } = args;
+
+    const results = await performTransferPrivateERC721Token(token_address, recipient_address, token_id, use_safe_transfer, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Transfers a private ERC721 token from the current account to another address
  * @param token_address The address of the ERC721 token contract
  * @param recipient_address The address of the recipient

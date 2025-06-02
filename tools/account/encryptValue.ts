@@ -71,3 +71,21 @@ export async function performEncryptValue(message: bigint | number | string, con
         throw new Error(`Failed to encrypt message: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the encryptValue tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function encryptValueHandler(args: Record<string, unknown> | undefined) {
+    if (!isEncryptValueArgs(args)) {
+        throw new Error("Invalid arguments for encrypt_value");
+    }
+    const { message, contract_address, function_selector } = args;
+
+    const results = await performEncryptValue(message, contract_address, function_selector);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

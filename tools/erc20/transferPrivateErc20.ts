@@ -58,6 +58,24 @@ export function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_
 }
 
 /**
+ * Handler for the transferPrivateERC20 tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function transferPrivateERC20TokenHandler(args: Record<string, unknown> | undefined) {
+    if (!isTransferPrivateERC20TokenArgs(args)) {
+        throw new Error("Invalid arguments for transfer_private_erc20");
+    }
+    const { token_address, recipient_address, amount_wei, gas_limit } = args;
+
+    const results = await performTransferPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Performs a private ERC20 token transfer on the COTI blockchain
  * @param token_address - Address of the ERC20 token contract
  * @param recipient_address - Address of the recipient

@@ -74,3 +74,21 @@ export async function performGenerateAesKey(account_address: string): Promise<st
         throw new Error(`Failed to generate AES key: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the generateAesKey tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function generateAesKeyHandler(args: Record<string, unknown> | undefined) {
+    if (!isGenerateAesKeyArgs(args)) {
+        throw new Error("Invalid arguments for generate_aes_key");
+    }
+    const { account_address } = args;
+
+    const results = await performGenerateAesKey(account_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

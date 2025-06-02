@@ -138,3 +138,21 @@ export async function performCallContractFunction(contract_address: string, func
         throw new Error(`Failed to call contract function: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the callContractFunction tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function callContractFunctionHandler(args: Record<string, unknown> | undefined) {
+    if (!isCallContractFunctionArgs(args)) {
+        throw new Error("Invalid arguments for call_contract_function");
+    }
+    const { contract_address, function_name, function_args, abi } = args;
+
+    const results = await performCallContractFunction(contract_address, function_name, function_args, abi);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

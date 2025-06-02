@@ -85,3 +85,21 @@ export async function performGetTransactionStatus(transaction_hash: string): Pro
         throw new Error(`Failed to get transaction status: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the getTransactionStatus tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getTransactionStatusHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetTransactionStatusArgs(args)) {
+        throw new Error("Invalid arguments for get_transaction_status");
+    }
+    const { transaction_hash } = args;
+
+    const results = await performGetTransactionStatus(transaction_hash);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

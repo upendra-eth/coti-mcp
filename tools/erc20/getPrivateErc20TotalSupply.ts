@@ -37,9 +37,27 @@ export function isGetPrivateERC20TotalSupplyArgs(args: unknown): args is { token
 }
 
 /**
- * Gets the total supply of tokens for a private ERC20 token on the COTI blockchain
- * @param token_address The address of the ERC20 token contract
- * @returns The total supply of tokens in this contract
+ * Handler for the getPrivateERC20TotalSupply tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC20TotalSupplyHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC20TotalSupplyArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc20_total_supply");
+    }
+    const { token_address } = args;
+
+    const results = await performGetPrivateERC20TotalSupply(token_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
+ * Gets the total supply of a private ERC20 token on the COTI blockchain
+ * @param token_address The ERC20 token contract address on COTI blockchain
+ * @returns The total supply of the token
  */
 export async function performGetPrivateERC20TotalSupply(token_address: string) {
     try {

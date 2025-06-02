@@ -51,3 +51,21 @@ export async function performChangeDefaultAccount(account_address: string) {
         throw new Error(`Failed to change default account: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the changeDefaultAccount tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function changeDefaultAccountHandler(args: Record<string, unknown> | undefined) {
+    if (!isChangeDefaultAccountArgs(args)) {
+        throw new Error("Invalid arguments for change_default_account");
+    }
+    const { account_address } = args;
+
+    const results = await performChangeDefaultAccount(account_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

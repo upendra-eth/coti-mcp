@@ -71,3 +71,21 @@ export async function performCreateAccount(set_as_default: boolean = false): Pro
         throw new Error(`Failed to create new account: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the createAccount tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function createAccountHandler(args: Record<string, unknown> | undefined) {
+    if (!isCreateAccountArgs(args)) {
+        throw new Error("Invalid arguments for create_account");
+    }
+    const set_as_default = args?.set_as_default as boolean | undefined;
+
+    const results = await performCreateAccount(set_as_default || false);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

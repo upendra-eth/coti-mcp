@@ -8,39 +8,39 @@ import {
 
 // Native tools
 import { GET_NATIVE_BALANCE, getNativeBalanceHandler } from './tools/native/getNativeBalance.js';
-import { TRANSFER_NATIVE, performTransferNative, isTransferNativeArgs } from './tools/native/transferNative.js';
+import { TRANSFER_NATIVE, transferNativeHandler } from './tools/native/transferNative.js';
 
 // ERC20 tools
-import { GET_PRIVATE_ERC20_TOKEN_BALANCE, isGetPrivateERC20TokenBalanceArgs, performGetPrivateERC20TokenBalance } from './tools/erc20/getPrivateErc20Balance.js';
-import { GET_PRIVATE_ERC20_TOTAL_SUPPLY, isGetPrivateERC20TotalSupplyArgs, performGetPrivateERC20TotalSupply } from "./tools/erc20/getPrivateErc20TotalSupply.js";
-import { GET_PRIVATE_ERC20_DECIMALS, isGetPrivateERC20DecimalsArgs, performGetPrivateERC20Decimals } from "./tools/erc20/getPrivateErc20Decimals.js";
-import { TRANSFER_PRIVATE_ERC20_TOKEN, isTransferPrivateERC20TokenArgs, performTransferPrivateERC20Token } from "./tools/erc20/transferPrivateErc20.js";
-import { DEPLOY_PRIVATE_ERC20_CONTRACT, isDeployPrivateERC20ContractArgs, performDeployPrivateERC20Contract } from "./tools/erc20/deployPrivateErc20Contract.js";
-import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPrivateERC20Token } from "./tools/erc20/mintPrivateErc20Token.js";
+import { GET_PRIVATE_ERC20_TOKEN_BALANCE, getPrivateERC20BalanceHandler } from './tools/erc20/getPrivateErc20Balance.js';
+import { GET_PRIVATE_ERC20_TOTAL_SUPPLY, getPrivateERC20TotalSupplyHandler } from "./tools/erc20/getPrivateErc20TotalSupply.js";
+import { GET_PRIVATE_ERC20_DECIMALS, getPrivateERC20DecimalsHandler } from "./tools/erc20/getPrivateErc20Decimals.js";
+import { TRANSFER_PRIVATE_ERC20_TOKEN, transferPrivateERC20TokenHandler } from "./tools/erc20/transferPrivateErc20.js";
+import { DEPLOY_PRIVATE_ERC20_CONTRACT, deployPrivateERC20ContractHandler } from "./tools/erc20/deployPrivateErc20Contract.js";
+import { MINT_PRIVATE_ERC20_TOKEN, mintPrivateERC20TokenHandler } from "./tools/erc20/mintPrivateErc20Token.js";
 
 // ERC721 tools
-import { TRANSFER_PRIVATE_ERC721_TOKEN, isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token } from "./tools/erc721/transferPrivateErc721.js";
-import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGetPrivateERC721TokenURI } from "./tools/erc721/getPrivateErc721TokenUri.js";
-import { GET_PRIVATE_ERC721_TOKEN_OWNER, isGetPrivateERC721TokenOwnerArgs, performGetPrivateERC721TokenOwner } from "./tools/erc721/getPrivateErc721TokenOwner.js";
-import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, isGetPrivateERC721TotalSupplyArgs, performGetPrivateERC721TotalSupply } from "./tools/erc721/getPrivateErc721TotalSupply.js";
-import { DEPLOY_PRIVATE_ERC721_CONTRACT, isDeployPrivateERC721ContractArgs, performDeployPrivateERC721Contract } from "./tools/erc721/deployPrivateErc721Contract.js";
-import { MINT_PRIVATE_ERC721_TOKEN, isMintPrivateERC721TokenArgs, performMintPrivateERC721Token } from "./tools/erc721/mintPrivateErc721Token.js";
+import { TRANSFER_PRIVATE_ERC721_TOKEN, transferPrivateERC721TokenHandler } from "./tools/erc721/transferPrivateErc721.js";
+import { GET_PRIVATE_ERC721_TOKEN_URI, getPrivateERC721TokenURIHandler } from "./tools/erc721/getPrivateErc721TokenUri.js";
+import { GET_PRIVATE_ERC721_TOKEN_OWNER, getPrivateERC721TokenOwnerHandler } from "./tools/erc721/getPrivateErc721TokenOwner.js";
+import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, getPrivateERC721TotalSupplyHandler } from "./tools/erc721/getPrivateErc721TotalSupply.js";
+import { DEPLOY_PRIVATE_ERC721_CONTRACT, deployPrivateERC721ContractHandler } from "./tools/erc721/deployPrivateErc721Contract.js";
+import { MINT_PRIVATE_ERC721_TOKEN, mintPrivateERC721TokenHandler } from "./tools/erc721/mintPrivateErc721Token.js";
 
 // Account tools
-import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/account/createAccount.js";
-import { LIST_ACCOUNTS, performListAccounts } from "./tools/account/listAccounts.js";
-import { CHANGE_DEFAULT_ACCOUNT, isChangeDefaultAccountArgs, performChangeDefaultAccount } from "./tools/account/changeDefaultAccount.js";
-import { GENERATE_AES_KEY, isGenerateAesKeyArgs, performGenerateAesKey } from "./tools/account/generateAesKey.js";
+import { CHANGE_DEFAULT_ACCOUNT, changeDefaultAccountHandler } from './tools/account/changeDefaultAccount.js';
+import { CREATE_ACCOUNT, createAccountHandler } from './tools/account/createAccount.js';
+import { GENERATE_AES_KEY, generateAesKeyHandler } from './tools/account/generateAesKey.js';
+import { LIST_ACCOUNTS, listAccountsHandler } from './tools/account/listAccounts.js';
 
 // Encryption tools
-import { ENCRYPT_VALUE, isEncryptValueArgs, performEncryptValue } from "./tools/account/encryptValue.js";
-import { DECRYPT_VALUE, isDecryptValueArgs, performDecryptValue } from "./tools/account/decryptValue.js";
+import { ENCRYPT_VALUE, encryptValueHandler } from "./tools/account/encryptValue.js";
+import { DECRYPT_VALUE, decryptValueHandler } from "./tools/account/decryptValue.js";
 
 // Transaction tools
-import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/transaction/getTransactionStatus.js";
-import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/transaction/getTransactionLogs.js";
-import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from "./tools/transaction/decodeEventData.js";
-import { CALL_CONTRACT_FUNCTION, isCallContractFunctionArgs, performCallContractFunction } from "./tools/transaction/callContractFunction.js";
+import { GET_TRANSACTION_STATUS, getTransactionStatusHandler } from "./tools/transaction/getTransactionStatus.js";
+import { GET_TRANSACTION_LOGS, getTransactionLogsHandler } from "./tools/transaction/getTransactionLogs.js";
+import { DECODE_EVENT_DATA, decodeEventDataHandler } from "./tools/transaction/decodeEventData.js";
+import { CALL_CONTRACT_FUNCTION, callContractFunctionHandler } from "./tools/transaction/callContractFunction.js";
 
 const server = new Server(
     {
@@ -111,303 +111,95 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
             
             case "get_private_erc20_balance": {
-                if (!isGetPrivateERC20TokenBalanceArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc20_balance");
-                }
-                const { account_address, token_address } = args;
-
-                const results = await performGetPrivateERC20TokenBalance(account_address, token_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC20BalanceHandler(args);
             }
             
             case "transfer_native": {
-                if (!isTransferNativeArgs(args)) {
-                    throw new Error("Invalid arguments for transfer_native");
-                }
-                const { recipient_address, amount_wei, gas_limit } = args;
-
-                const results = await performTransferNative(recipient_address, amount_wei, gas_limit);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await transferNativeHandler(args);
             }
             
             case "transfer_private_erc20": {
-                if (!isTransferPrivateERC20TokenArgs(args)) {
-                    throw new Error("Invalid arguments for transfer_private_erc20");
-                }
-                const { token_address, recipient_address, amount_wei, gas_limit } = args;
-
-                const results = await performTransferPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await transferPrivateERC20TokenHandler(args);
             }
             
             case "encrypt_value": {
-                if (!isEncryptValueArgs(args)) {
-                    throw new Error("Invalid arguments for encrypt_value");
-                }
-                const { message, contract_address, function_selector } = args;
-
-                const results = await performEncryptValue(message, contract_address, function_selector);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await encryptValueHandler(args);
             }
 
             case "decrypt_value": {
-                if (!isDecryptValueArgs(args)) {
-                    throw new Error("Invalid arguments for decrypt_value");
-                }
-                const { ciphertext } = args;
-
-                const results = await performDecryptValue(BigInt(ciphertext));
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await decryptValueHandler(args);
             }
             
             case "transfer_private_erc721": {
-                if (!isTransferPrivateERC721TokenArgs(args)) {
-                    throw new Error("Invalid arguments for transfer_private_erc721");
-                }
-                const { token_address, recipient_address, token_id, use_safe_transfer, gas_limit } = args;
-
-                const results = await performTransferPrivateERC721Token(
-                    token_address, 
-                    recipient_address, 
-                    token_id, 
-                    use_safe_transfer || false, 
-                    gas_limit
-                );
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await transferPrivateERC721TokenHandler(args);
             }
             
             case "get_private_erc721_token_uri": {
-                if (!isGetPrivateERC721TokenURIArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc721_token_uri");
-                }
-                const { token_address, token_id } = args;
-
-                const results = await performGetPrivateERC721TokenURI(token_address, token_id);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC721TokenURIHandler(args);
             }
             
             case "get_private_erc721_token_owner": {
-                if (!isGetPrivateERC721TokenOwnerArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc721_token_owner");
-                }
-                const { token_address, token_id } = args;
-
-                const results = await performGetPrivateERC721TokenOwner(token_address, token_id);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC721TokenOwnerHandler(args);
             }
             
             case "get_private_erc721_total_supply": {
-                if (!isGetPrivateERC721TotalSupplyArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc721_total_supply");
-                }
-                const { token_address } = args;
-
-                const results = await performGetPrivateERC721TotalSupply(token_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC721TotalSupplyHandler(args);
             }
 
             case "get_private_erc20_total_supply": {
-                if (!isGetPrivateERC20TotalSupplyArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc20_total_supply");
-                }
-                const { token_address } = args;
-
-                const results = await performGetPrivateERC20TotalSupply(token_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC20TotalSupplyHandler(args);
             }
             
             case "get_private_erc20_decimals": {
-                if (!isGetPrivateERC20DecimalsArgs(args)) {
-                    throw new Error("Invalid arguments for get_private_erc20_decimals");
-                }
-                const { token_address } = args;
-
-                const results = await performGetPrivateERC20Decimals(token_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getPrivateERC20DecimalsHandler(args);
             }
             
             case "deploy_private_erc721_contract": {
-                if (!isDeployPrivateERC721ContractArgs(args)) {
-                    throw new Error("Invalid arguments for deploy_private_erc721_contract");
-                }
-                const { name, symbol, gas_limit } = args;
-
-                const results = await performDeployPrivateERC721Contract(name, symbol, gas_limit);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await deployPrivateERC721ContractHandler(args);
             }
 
             case "deploy_private_erc20_contract": {
-                if (!isDeployPrivateERC20ContractArgs(args)) {
-                    throw new Error("Invalid arguments for deploy_private_erc20_contract");
-                }
-                const { name, symbol } = args;
-
-                const results = await performDeployPrivateERC20Contract(name, symbol);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await deployPrivateERC20ContractHandler(args);
             }
             
             case "mint_private_erc721_token": {
-                if (!isMintPrivateERC721TokenArgs(args)) {
-                    throw new Error("Invalid arguments for mint_private_erc721_token");
-                }
-                const { token_address, to_address, token_uri, gas_limit } = args;
-
-                const results = await performMintPrivateERC721Token(token_address, to_address, token_uri, gas_limit);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await mintPrivateERC721TokenHandler(args);
             }
             
             case "mint_private_erc20_token": {
-                if (!isMintPrivateERC20TokenArgs(args)) {
-                    throw new Error("Invalid arguments for mint_private_erc20_token");
-                }
-                const { token_address, recipient_address, amount_wei, gas_limit } = args;
-
-                const results = await performMintPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await mintPrivateERC20TokenHandler(args);
             }
 
             case "change_default_account": {
-                if (!isChangeDefaultAccountArgs(args)) {
-                    throw new Error("Invalid arguments for change_default_account");
-                }
-                const { account_address } = args;
-
-                const results = await performChangeDefaultAccount(account_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await changeDefaultAccountHandler(args);
             }
 
             case "create_account": {
-                if (!isCreateAccountArgs(args)) {
-                    throw new Error("Invalid arguments for create_account");
-                }
-                const { set_as_default } = args;
-
-                const results = await performCreateAccount(set_as_default || false);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await createAccountHandler(args);
             }
 
             case "generate_aes_key": {
-                if (!isGenerateAesKeyArgs(args)) {
-                    throw new Error("Invalid arguments for generate_aes_key");
-                }
-                const { account_address } = args;
-
-                const results = await performGenerateAesKey(account_address);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await generateAesKeyHandler(args);
             }
             
             case "list_accounts": {
-                const results = await performListAccounts();
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await listAccountsHandler(args);
             }
 
             case "get_transaction_status": {
-                if (!isGetTransactionStatusArgs(args)) {
-                    throw new Error("Invalid arguments for get_transaction_status");
-                }
-                const { transaction_hash } = args;
-
-                const results = await performGetTransactionStatus(transaction_hash);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getTransactionStatusHandler(args);
             }
             
             case "get_transaction_logs": {
-                if (!isGetTransactionLogsArgs(args)) {
-                    throw new Error("Invalid arguments for get_transaction_logs");
-                }
-                const { transaction_hash } = args;
-
-                const results = await performGetTransactionLogs(transaction_hash);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await getTransactionLogsHandler(args);
             }
             
             case "decode_event_data": {
-                if (!isDecodeEventDataArgs(args)) {
-                    throw new Error("Invalid arguments for decode_event_data");
-                }
-                const { topics, data, abi } = args;
-
-                const results = await performDecodeEventData(topics, data, abi);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await decodeEventDataHandler(args);
             }
             
             case "call_contract_function": {
-                if (!isCallContractFunctionArgs(args)) {
-                    throw new Error("Invalid arguments for call_contract_function");
-                }
-                const { contract_address, function_name, function_args, abi } = args;
-
-                const results = await performCallContractFunction(contract_address, function_name, function_args, abi);
-                return {
-                    content: [{ type: "text", text: results }],
-                    isError: false,
-                };
+                return await callContractFunctionHandler(args);
             }
 
             default:

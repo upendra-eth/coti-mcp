@@ -37,6 +37,24 @@ export function isGetPrivateERC20DecimalsArgs(args: unknown): args is { token_ad
 }
 
 /**
+ * Handler for the getPrivateERC20Decimals tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC20DecimalsHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC20DecimalsArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc20_decimals");
+    }
+    const { token_address } = args;
+
+    const results = await performGetPrivateERC20Decimals(token_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Performs the getPrivateERC20Decimals tool
  * @param token_address The token contract address
  * @returns The number of decimals in this contract

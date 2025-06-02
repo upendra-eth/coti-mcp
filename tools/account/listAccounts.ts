@@ -57,3 +57,16 @@ export async function performListAccounts(): Promise<string> {
         throw new Error(`Failed to list accounts: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the listAccounts tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function listAccountsHandler(args: Record<string, unknown> | undefined) {
+    const results = await performListAccounts();
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

@@ -43,6 +43,24 @@ export function isGetPrivateERC721TokenURIArgs(args: unknown): args is { token_a
 }
 
 /**
+ * Handler for the getPrivateERC721TokenURI tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC721TokenURIHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC721TokenURIArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc721_token_uri");
+    }
+    const { token_address, token_id } = args;
+
+    const results = await performGetPrivateERC721TokenURI(token_address, token_id);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Gets the tokenURI for a private ERC721 NFT token on the COTI blockchain
  * @param token_address The address of the ERC721 token contract
  * @param token_id The ID of the token to get the URI for

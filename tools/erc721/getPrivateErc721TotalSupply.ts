@@ -37,6 +37,24 @@ export function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { toke
 }
 
 /**
+ * Handler for the getPrivateERC721TotalSupply tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC721TotalSupplyHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC721TotalSupplyArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc721_total_supply");
+    }
+    const { token_address } = args;
+
+    const results = await performGetPrivateERC721TotalSupply(token_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Gets the total supply of tokens for a private ERC721 NFT collection
  * @param token_address The address of the ERC721 token contract
  * @returns A formatted string with the total supply information

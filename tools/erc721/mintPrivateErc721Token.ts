@@ -54,6 +54,24 @@ export function isMintPrivateERC721TokenArgs(args: unknown): args is { token_add
 }
 
 /**
+ * Handler for the mintPrivateERC721Token tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function mintPrivateERC721TokenHandler(args: Record<string, unknown> | undefined) {
+    if (!isMintPrivateERC721TokenArgs(args)) {
+        throw new Error("Invalid arguments for mint_private_erc721_token");
+    }
+    const { token_address, to_address, token_uri, gas_limit } = args;
+
+    const results = await performMintPrivateERC721Token(token_address, to_address, token_uri, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Performs the minting of a private ERC721 token.
  * @param token_address The address of the ERC721 token contract.
  * @param to_address The address to receive the minted NFT.

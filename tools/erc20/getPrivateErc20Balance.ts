@@ -65,6 +65,24 @@ export const decryptBalance = (balance: ctUint, AESkey: string) => {
 };
 
 /**
+ * Handler for the getPrivateERC20Balance tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC20BalanceHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC20TokenBalanceArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc20_balance");
+    }
+    const { account_address, token_address } = args;
+
+    const results = await performGetPrivateERC20TokenBalance(account_address, token_address);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Gets the balance of a private ERC20 token on the COTI blockchain
  * @param account_address The COTI account address to get the balance for
  * @param token_address The ERC20 token contract address on COTI blockchain

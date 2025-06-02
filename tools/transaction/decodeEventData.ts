@@ -97,3 +97,21 @@ export async function performDecodeEventData(topics: string[], data: string, abi
         throw new Error(`Failed to decode event data: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the decodeEventData tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function decodeEventDataHandler(args: Record<string, unknown> | undefined) {
+    if (!isDecodeEventDataArgs(args)) {
+        throw new Error("Invalid arguments for decode_event_data");
+    }
+    const { topics, data, abi } = args;
+
+    const results = await performDecodeEventData(topics, data, abi);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

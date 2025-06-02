@@ -53,6 +53,24 @@ export function isMintPrivateERC20TokenArgs(args: unknown): args is { token_addr
 }
 
 /**
+ * Handler for the mintPrivateERC20Token tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function mintPrivateERC20TokenHandler(args: Record<string, unknown> | undefined) {
+    if (!isMintPrivateERC20TokenArgs(args)) {
+        throw new Error("Invalid arguments for mint_private_erc20_token");
+    }
+    const { token_address, recipient_address, amount_wei, gas_limit } = args;
+
+    const results = await performMintPrivateERC20Token(token_address, recipient_address, amount_wei, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Performs the minting of private ERC20 tokens.
  * @param token_address The address of the ERC20 token contract.
  * @param recipient_address The address of the recipient.

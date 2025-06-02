@@ -48,6 +48,24 @@ export function isDeployPrivateERC721ContractArgs(args: unknown): args is { name
 }
 
 /**
+ * Handler for the deployPrivateERC721Contract tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function deployPrivateERC721ContractHandler(args: Record<string, unknown> | undefined) {
+    if (!isDeployPrivateERC721ContractArgs(args)) {
+        throw new Error("Invalid arguments for deploy_private_erc721_contract");
+    }
+    const { name, symbol, gas_limit } = args;
+
+    const results = await performDeployPrivateERC721Contract(name, symbol, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Deploys a new private ERC721 contract on the COTI blockchain.
  * @param name The name of the NFT collection.
  * @param symbol The symbol of the NFT collection (typically 3-5 characters).

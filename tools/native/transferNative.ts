@@ -78,3 +78,21 @@ export function isTransferNativeArgs(args: unknown): args is { recipient_address
         (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
     );
 }
+
+/**
+ * Handler for the transferNative tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function transferNativeHandler(args: Record<string, unknown> | undefined) {
+    if (!isTransferNativeArgs(args)) {
+        throw new Error("Invalid arguments for transfer_native");
+    }
+    const { recipient_address, amount_wei, gas_limit } = args;
+
+    const results = await performTransferNative(recipient_address, amount_wei, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

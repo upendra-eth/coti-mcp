@@ -53,3 +53,21 @@ export async function performDecryptValue(ciphertext: bigint) {
         throw new Error(`Failed to decrypt message: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the decryptValue tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function decryptValueHandler(args: Record<string, unknown> | undefined) {
+    if (!isDecryptValueArgs(args)) {
+        throw new Error("Invalid arguments for decrypt_value");
+    }
+    const { ciphertext } = args;
+
+    const results = await performDecryptValue(BigInt(ciphertext));
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

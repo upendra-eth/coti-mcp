@@ -47,6 +47,24 @@ export function isDeployPrivateERC20ContractArgs(args: unknown): args is { name:
 }
 
 /**
+ * Handler for the deployPrivateERC20Contract tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function deployPrivateERC20ContractHandler(args: Record<string, unknown> | undefined) {
+    if (!isDeployPrivateERC20ContractArgs(args)) {
+        throw new Error("Invalid arguments for deploy_private_erc20_contract");
+    }
+    const { name, symbol, gas_limit } = args;
+
+    const results = await performDeployPrivateERC20Contract(name, symbol, gas_limit);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Deploys a new private ERC20 contract on the COTI blockchain
  * @param name The name of the token
  * @param symbol The symbol of the token

@@ -92,3 +92,21 @@ export async function performGetTransactionLogs(transaction_hash: string): Promi
         throw new Error(`Failed to get transaction logs: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
+/**
+ * Handler for the getTransactionLogs tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getTransactionLogsHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetTransactionLogsArgs(args)) {
+        throw new Error("Invalid arguments for get_transaction_logs");
+    }
+    const { transaction_hash } = args;
+
+    const results = await performGetTransactionLogs(transaction_hash);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}

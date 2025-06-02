@@ -43,6 +43,24 @@ export function isGetPrivateERC721TokenOwnerArgs(args: unknown): args is { token
 }
 
 /**
+ * Handler for the getPrivateERC721TokenOwner tool
+ * @param args The arguments for the tool
+ * @returns The tool response
+ */
+export async function getPrivateERC721TokenOwnerHandler(args: Record<string, unknown> | undefined) {
+    if (!isGetPrivateERC721TokenOwnerArgs(args)) {
+        throw new Error("Invalid arguments for get_private_erc721_token_owner");
+    }
+    const { token_address, token_id } = args;
+
+    const results = await performGetPrivateERC721TokenOwner(token_address, token_id);
+    return {
+        content: [{ type: "text", text: results }],
+        isError: false,
+    };
+}
+
+/**
  * Gets the owner address of a private ERC721 NFT token
  * @param token_address The address of the ERC721 token contract
  * @param token_id The ID of the token to check ownership for
