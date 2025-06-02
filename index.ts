@@ -4,12 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
     CallToolRequestSchema,
     ListToolsRequestSchema,
-    Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { buildStringInputText } from '@coti-io/coti-sdk-typescript';
-import { getCurrentAccountKeys } from "./tools/shared/account.js";
-import { ERC721_ABI } from "./tools/constants/abis.js";
 
 // Native tools
 import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
@@ -29,6 +24,7 @@ import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGe
 import { GET_PRIVATE_ERC721_TOKEN_OWNER, isGetPrivateERC721TokenOwnerArgs, performGetPrivateERC721TokenOwner } from "./tools/getPrivateErc721TokenOwner.js";
 import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, isGetPrivateERC721TotalSupplyArgs, performGetPrivateERC721TotalSupply } from "./tools/getPrivateErc721TotalSupply.js";
 import { DEPLOY_PRIVATE_ERC721_CONTRACT, isDeployPrivateERC721ContractArgs, performDeployPrivateERC721Contract } from "./tools/deployPrivateErc721Contract.js";
+import { isMintPrivateERC721TokenArgs, MINT_PRIVATE_ERC721_TOKEN, performMintPrivateERC721Token } from "./tools/mintPrivateErc721Token.js";
 
 // Account tools
 import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
@@ -45,36 +41,6 @@ import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from
 // Transaction tools
 import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
 import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/getTransactionLogs.js";
-
-const MINT_PRIVATE_ERC721_TOKEN: Tool = {
-    name: "mint_private_erc721_token",
-    description:
-        "Mint a new private ERC721 NFT token on the COTI blockchain. " +
-        "This creates a new NFT in the specified collection with the provided token URI. " +
-        "Returns the transaction hash and token ID upon successful minting.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            to_address: {
-                type: "string",
-                description: "Address to receive the minted NFT",
-            },
-            token_uri: {
-                type: "string",
-                description: "URI for the token metadata (can be IPFS URI or any other URI)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the minting transaction",
-            },
-        },
-        required: ["token_address", "to_address", "token_uri"],
-    },
-};
 
 const server = new Server(
     {
@@ -104,57 +70,6 @@ const COTI_MCP_PUBLIC_KEY = process.env.COTI_MCP_PUBLIC_KEY!;
 if (!COTI_MCP_PUBLIC_KEY) {
     console.error("Error: COTI_MCP_PUBLIC_KEY environment variable is required");
     process.exit(1);
-}
-
-function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, to_address: string, token_uri: string, gas_limit?: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "token_address" in args &&
-        typeof (args as { token_address: string }).token_address === "string" &&
-        "to_address" in args &&
-        typeof (args as { to_address: string }).to_address === "string" &&
-        "token_uri" in args &&
-        typeof (args as { token_uri: string }).token_uri === "string" &&
-        (!("gas_limit" in args) || ("gas_limit" in args && typeof (args as { gas_limit: string }).gas_limit === "string"))
-    );
-}
-
-async function performMintPrivateERC721Token(token_address: string, to_address: string, token_uri: string, gas_limit?: string) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        wallet.setAesKey(currentAccountKeys.aesKey);
-        
-        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
-        
-        const mintSelector = tokenContract.mint.fragment.selector;
-        
-        const encryptedInputText = buildStringInputText(token_uri, { wallet: wallet, userKey: currentAccountKeys.aesKey }, token_address, mintSelector);
-        
-        const txOptions: any = {};
-        if (gas_limit) {
-            txOptions.gasLimit = gas_limit;
-        }
-        
-        const mintTx = await tokenContract.mint(to_address, encryptedInputText, txOptions);
-        const receipt = await mintTx.wait();
-        
-        let tokenId = "Unknown";
-        if (receipt && receipt.logs && receipt.logs.length > 0) {
-            const transferEvent = receipt.logs[0];
-            if (transferEvent && transferEvent.topics && transferEvent.topics.length > 3) {
-                tokenId = BigInt(transferEvent.topics[3]).toString();
-            }
-        }
-        
-        return `NFT Minting Successful!\nTo Address: ${to_address}\nToken Address: ${token_address}\nToken URI: ${token_uri}\nToken ID: ${tokenId}\nTransaction Hash: ${receipt.hash}`;
-    } catch (error) {
-        console.error('Error minting private ERC721 token:', error);
-        throw new Error(`Failed to mint private ERC721 token: ${error instanceof Error ? error.message : String(error)}`);
-    }
 }
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
