@@ -23,6 +23,9 @@ import { TRANSFER_PRIVATE_ERC20_TOKEN, isTransferPrivateERC20TokenArgs, performT
 import { DEPLOY_PRIVATE_ERC20_CONTRACT, isDeployPrivateERC20ContractArgs, performDeployPrivateERC20Contract } from "./tools/deployPrivateErc20Contract.js";
 import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPrivateERC20Token } from "./tools/mintPrivateErc20Token.js";
 
+// ERC721 tools
+import { isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token, TRANSFER_PRIVATE_ERC721_TOKEN } from "./tools/transferPrivateErc721.js";
+
 // Account tools
 import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
 import { LIST_ACCOUNTS, performListAccounts } from "./tools/listAccounts.js";
@@ -38,31 +41,7 @@ import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from
 // Transaction tools
 import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
 import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/getTransactionLogs.js";
-import { isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token, TRANSFER_PRIVATE_ERC721_TOKEN } from "./tools/transferPrivateErc721.js";
-
-
-const GET_PRIVATE_ERC721_TOKEN_URI: Tool = {
-    name: "get_private_erc721_token_uri",
-    description:
-        "Get the tokenURI for a private ERC721 NFT token on the COTI blockchain. " +
-        "This is used for retrieving the metadata URI of a private NFT. " +
-        "Requires token contract address and token ID as input. " +
-        "Returns the decrypted tokenURI.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            token_id: {
-                type: "string",
-                description: "ID of the NFT token to get the URI for",
-            },
-        },
-        required: ["token_address", "token_id"],
-    },
-};
+import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGetPrivateERC721TokenURI } from "./tools/getPrivateErc721TokenUri.js";
 
 const GET_PRIVATE_ERC721_TOKEN_OWNER: Tool = {
     name: "get_private_erc721_token_owner",
@@ -192,17 +171,6 @@ if (!COTI_MCP_PUBLIC_KEY) {
     process.exit(1);
 }
 
-function isGetPrivateERC721TokenURIArgs(args: unknown): args is { token_address: string, token_id: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "token_address" in args &&
-        typeof (args as { token_address: string }).token_address === "string" &&
-        "token_id" in args &&
-        typeof (args as { token_id: string }).token_id === "string"
-    );
-}
-
 function isGetPrivateERC721TokenOwnerArgs(args: unknown): args is { token_address: string, token_id: string } {
     return (
         typeof args === "object" &&
@@ -279,36 +247,6 @@ async function performDeployPrivateERC721Contract(name: string, symbol: string, 
     } catch (error) {
         console.error('Error deploying private ERC721 contract:', error);
         throw new Error(`Failed to deploy private ERC721 contract: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-async function performGetPrivateERC721TokenURI(token_address: string, token_id: string) {
-    try {
-        const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        
-        wallet.setAesKey(currentAccountKeys.aesKey);
-        
-        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
-        
-        const [symbolResult, nameResult] = await Promise.all([
-            tokenContract.symbol(),
-            tokenContract.name()
-        ]);
-        
-        const encryptedTokenURI = await tokenContract.tokenURI(BigInt(token_id));
-
-        let tokenURI;
-        try {
-            tokenURI = await wallet.decryptValue(encryptedTokenURI);
-        } catch (decryptError) {
-            tokenURI = decryptError;
-        }
-        
-        return `Token: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nDecrypted Token URI: ${tokenURI}`;
-    } catch (error) {
-        throw new Error(`Failed to get private ERC721 token URI: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
