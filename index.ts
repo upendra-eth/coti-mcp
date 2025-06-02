@@ -9,7 +9,7 @@ import {
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { buildStringInputText } from '@coti-io/coti-sdk-typescript';
 import { getCurrentAccountKeys } from "./tools/shared/account.js";
-import { ERC20_ABI, ERC721_ABI } from "./tools/constants/abis.js";
+import { ERC721_ABI } from "./tools/constants/abis.js";
 
 // Native tools
 import { GET_NATIVE_BALANCE, performGetNativeBalance, isGetNativeBalanceArgs } from './tools/getNativeBalance.js';
@@ -27,6 +27,7 @@ import { MINT_PRIVATE_ERC20_TOKEN, isMintPrivateERC20TokenArgs, performMintPriva
 import { TRANSFER_PRIVATE_ERC721_TOKEN, isTransferPrivateERC721TokenArgs, performTransferPrivateERC721Token } from "./tools/transferPrivateErc721.js";
 import { GET_PRIVATE_ERC721_TOKEN_URI, isGetPrivateERC721TokenURIArgs, performGetPrivateERC721TokenURI } from "./tools/getPrivateErc721TokenUri.js";
 import { GET_PRIVATE_ERC721_TOKEN_OWNER, isGetPrivateERC721TokenOwnerArgs, performGetPrivateERC721TokenOwner } from "./tools/getPrivateErc721TokenOwner.js";
+import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, isGetPrivateERC721TotalSupplyArgs, performGetPrivateERC721TotalSupply } from "./tools/getPrivateErc721TotalSupply.js";
 
 // Account tools
 import { CREATE_ACCOUNT, isCreateAccountArgs, performCreateAccount } from "./tools/createAccount.js";
@@ -43,25 +44,6 @@ import { DECODE_EVENT_DATA, isDecodeEventDataArgs, performDecodeEventData } from
 // Transaction tools
 import { GET_TRANSACTION_STATUS, isGetTransactionStatusArgs, performGetTransactionStatus } from "./tools/getTransactionStatus.js";
 import { GET_TRANSACTION_LOGS, isGetTransactionLogsArgs, performGetTransactionLogs } from "./tools/getTransactionLogs.js";
-
-const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
-    name: "get_private_erc721_total_supply",
-    description:
-        "Get the total supply of tokens for a private ERC721 NFT collection on the COTI blockchain. " +
-        "This is used for checking how many NFTs have been minted in a collection. " +
-        "Requires token contract address as input. " +
-        "Returns the total number of tokens in the collection.",
-    inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-        },
-        required: ["token_address"],
-    },
-};
 
 const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
     name: "deploy_private_erc721_contract",
@@ -149,15 +131,6 @@ if (!COTI_MCP_PUBLIC_KEY) {
     process.exit(1);
 }
 
-function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { token_address: string } {
-    return (
-        typeof args === "object" &&
-        args !== null &&
-        "token_address" in args &&
-        typeof (args as { token_address: string }).token_address === "string"
-    );
-}
-
 function isMintPrivateERC721TokenArgs(args: unknown): args is { token_address: string, to_address: string, token_uri: string, gas_limit?: string } {
     return (
         typeof args === "object" &&
@@ -214,33 +187,6 @@ async function performDeployPrivateERC721Contract(name: string, symbol: string, 
     } catch (error) {
         console.error('Error deploying private ERC721 contract:', error);
         throw new Error(`Failed to deploy private ERC721 contract: ${error instanceof Error ? error.message : String(error)}`);
-    }
-}
-
-/**
- * Gets the total supply of tokens for a private ERC721 NFT collection
- * @param token_address The address of the ERC721 token contract
- * @returns A formatted string with the total supply information
- */
-async function performGetPrivateERC721TotalSupply(token_address: string) {
-    try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
-        const currentAccountKeys = getCurrentAccountKeys();
-        
-        const wallet = new Wallet(currentAccountKeys.privateKey, provider);
-        wallet.setAesKey(currentAccountKeys.aesKey);
-        
-        const tokenContract = new Contract(token_address, ERC721_ABI, wallet);
-        
-        const name = await tokenContract.name();
-        const symbol = await tokenContract.symbol();
-        
-        const totalSupply = await tokenContract.totalSupply();
-        
-        return `Collection: ${name} (${symbol})\nTotal Supply: ${totalSupply.toString()} tokens`;
-    } catch (error) {
-        console.error('Error getting private ERC721 total supply:', error);
-        throw new Error(`Failed to get private ERC721 total supply: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
