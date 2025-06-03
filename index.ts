@@ -31,6 +31,7 @@ import { CHANGE_DEFAULT_ACCOUNT, changeDefaultAccountHandler } from './tools/acc
 import { CREATE_ACCOUNT, createAccountHandler } from './tools/account/createAccount.js';
 import { GENERATE_AES_KEY, generateAesKeyHandler } from './tools/account/generateAesKey.js';
 import { LIST_ACCOUNTS, listAccountsHandler } from './tools/account/listAccounts.js';
+import { EXPORT_ACCOUNTS, exportAccountsHandler } from './tools/account/exportAccounts.js';
 
 // Encryption tools
 import { ENCRYPT_VALUE, encryptValueHandler } from "./tools/account/encryptValue.js";
@@ -97,7 +98,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GET_TRANSACTION_LOGS,
         DECODE_EVENT_DATA,
         CALL_CONTRACT_FUNCTION,
-        LIST_ACCOUNTS
+        LIST_ACCOUNTS,
+        EXPORT_ACCOUNTS
     ],
 }));
 
@@ -184,6 +186,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             case "list_accounts": {
                 return await listAccountsHandler(args);
+            }
+            
+            case "export_accounts": {
+                return await exportAccountsHandler(args);
             }
 
             case "get_transaction_status": {
