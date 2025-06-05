@@ -11,12 +11,16 @@ export const ERC20_ABI = [
         internalType: "string",
         name: "symbol_",
         type: "string"
+      },
+      {
+        internalType: "uint8",
+        name: "decimals_",
+        type: "uint8"
       }
     ],
     stateMutability: "nonpayable",
     type: "constructor"
   },
-  
   // Name
   {
     constant: true,
@@ -46,6 +50,8 @@ export const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Total Supply
   {
     inputs: [],
     name: "totalSupply",
@@ -53,6 +59,8 @@ export const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
+
+  // Balance of
   {
     inputs: [
       {
@@ -72,7 +80,7 @@ export const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
-  
+
   // Allowance functions
   {
     inputs: [
@@ -91,7 +99,7 @@ export const ERC20_ABI = [
     stateMutability: "view",
     type: "function"
   },
-  
+
   // Approve functions
   {
     inputs: [
@@ -196,7 +204,7 @@ export const ERC20_ABI = [
     stateMutability: "nonpayable",
     type: "function"
   },
-  
+
   // TransferFrom functions
   {
     inputs: [
@@ -216,7 +224,7 @@ export const ERC20_ABI = [
     stateMutability: "nonpayable",
     type: "function"
   },
-  
+
   // Account Encryption Address
   {
     inputs: [{ name: "account", type: "address" }],
@@ -282,25 +290,6 @@ export const ERC20_ABI = [
     type: "function"
   },
 
-  // Allowance
-  {
-    inputs: [
-      { name: "owner", type: "address" },
-      { name: "spender", type: "address" }
-    ],
-    name: "allowance",
-    outputs: [{
-      components: [
-        { name: "ciphertext", type: "uint256" },
-        { name: "ownerCiphertext", type: "uint256" },
-        { name: "spenderCiphertext", type: "uint256" }
-      ],
-      type: "tuple"
-    }],
-    stateMutability: "view",
-    type: "function"
-  },
-
   // Allowance (owner, spender)
   {
     inputs: [
@@ -318,20 +307,7 @@ export const ERC20_ABI = [
     }],
     stateMutability: "view",
     type: "function"
-  },
-
-  // Allowance (account, isSpender)
-  {
-    inputs: [
-      { name: "account", type: "address" },
-      { name: "isSpender", type: "bool" }
-    ],
-    name: "allowance",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function"
   }
-
 ];
 
 export const ERC721_ABI = [
