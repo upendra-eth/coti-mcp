@@ -17,6 +17,8 @@ import { GET_PRIVATE_ERC20_DECIMALS, getPrivateERC20DecimalsHandler } from "./to
 import { TRANSFER_PRIVATE_ERC20_TOKEN, transferPrivateERC20TokenHandler } from "./tools/erc20/transferPrivateErc20.js";
 import { DEPLOY_PRIVATE_ERC20_CONTRACT, deployPrivateERC20ContractHandler } from "./tools/erc20/deployPrivateErc20Contract.js";
 import { MINT_PRIVATE_ERC20_TOKEN, mintPrivateERC20TokenHandler } from "./tools/erc20/mintPrivateErc20Token.js";
+import { APPROVE_ERC20_SPENDER, approveERC20SpenderHandler } from "./tools/erc20/approveErc20Spender.js";
+import { GET_ERC20_ALLOWANCE, getERC20AllowanceHandler } from "./tools/erc20/getErc20Allowance.js";
 
 // ERC721 tools
 import { TRANSFER_PRIVATE_ERC721_TOKEN, transferPrivateERC721TokenHandler } from "./tools/erc721/transferPrivateErc721.js";
@@ -76,32 +78,43 @@ if (!COTI_MCP_PUBLIC_KEY) {
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
-        GET_NATIVE_BALANCE, 
-        TRANSFER_NATIVE, 
-        GET_PRIVATE_ERC20_TOKEN_BALANCE, 
-        TRANSFER_PRIVATE_ERC20_TOKEN, 
-        TRANSFER_PRIVATE_ERC721_TOKEN,
-        GET_PRIVATE_ERC721_TOKEN_URI,
-        GET_PRIVATE_ERC721_TOKEN_OWNER,
-        GET_PRIVATE_ERC721_TOTAL_SUPPLY,
-        GET_PRIVATE_ERC20_TOTAL_SUPPLY,
-        GET_PRIVATE_ERC20_DECIMALS,
-        DEPLOY_PRIVATE_ERC721_CONTRACT,
-        DEPLOY_PRIVATE_ERC20_CONTRACT,
-        MINT_PRIVATE_ERC721_TOKEN,
-        MINT_PRIVATE_ERC20_TOKEN,
-        ENCRYPT_VALUE, 
-        DECRYPT_VALUE,
+        // Account tools
         CHANGE_DEFAULT_ACCOUNT,
         CREATE_ACCOUNT,
-        GENERATE_AES_KEY,
-        GET_TRANSACTION_STATUS,
-        GET_TRANSACTION_LOGS,
-        DECODE_EVENT_DATA,
-        CALL_CONTRACT_FUNCTION,
-        LIST_ACCOUNTS,
+        DECRYPT_VALUE,
+        ENCRYPT_VALUE, 
         EXPORT_ACCOUNTS,
-        IMPORT_ACCOUNTS
+        GENERATE_AES_KEY,
+        IMPORT_ACCOUNTS,
+        LIST_ACCOUNTS,
+
+        // ERC20 Tools
+        APPROVE_ERC20_SPENDER,
+        DEPLOY_PRIVATE_ERC20_CONTRACT,
+        GET_ERC20_ALLOWANCE,
+        GET_PRIVATE_ERC20_TOKEN_BALANCE, 
+        GET_PRIVATE_ERC20_DECIMALS,
+        GET_PRIVATE_ERC20_TOTAL_SUPPLY,
+        MINT_PRIVATE_ERC20_TOKEN,
+        TRANSFER_PRIVATE_ERC20_TOKEN, 
+        
+        // ERC721 Tools
+        DEPLOY_PRIVATE_ERC721_CONTRACT,
+        GET_PRIVATE_ERC721_TOKEN_OWNER,
+        GET_PRIVATE_ERC721_TOKEN_URI,
+        GET_PRIVATE_ERC721_TOTAL_SUPPLY,
+        MINT_PRIVATE_ERC721_TOKEN,
+        TRANSFER_PRIVATE_ERC721_TOKEN,
+        
+        // Native tools
+        GET_NATIVE_BALANCE, 
+        TRANSFER_NATIVE,
+
+        // Transaction tools
+        CALL_CONTRACT_FUNCTION,
+        DECODE_EVENT_DATA,
+        GET_TRANSACTION_LOGS,
+        GET_TRANSACTION_STATUS,
     ],
 }));
 
@@ -173,6 +186,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             case "mint_private_erc20_token": {
                 return await mintPrivateERC20TokenHandler(args);
             }
+            
+            case "approve_erc20_spender": {
+                return await approveERC20SpenderHandler(args);
+            }
+            
+            case "get_erc20_allowance": {
+                return await getERC20AllowanceHandler(args);
+            }
 
             case "change_default_account": {
                 return await changeDefaultAccountHandler(args);
@@ -212,6 +233,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             case "call_contract_function": {
                 return await callContractFunctionHandler(args);
+            }
+
+            case "approve_erc20_spender": {
+                return await approveERC20SpenderHandler(args);
             }
 
             default:

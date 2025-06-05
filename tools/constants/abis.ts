@@ -280,7 +280,58 @@ export const ERC20_ABI = [
     ],
     stateMutability: "view",
     type: "function"
+  },
+
+  // Allowance
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" }
+    ],
+    name: "allowance",
+    outputs: [{
+      components: [
+        { name: "ciphertext", type: "uint256" },
+        { name: "ownerCiphertext", type: "uint256" },
+        { name: "spenderCiphertext", type: "uint256" }
+      ],
+      type: "tuple"
+    }],
+    stateMutability: "view",
+    type: "function"
+  },
+
+  // Allowance (owner, spender)
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" }
+    ],
+    name: "allowance",
+    outputs: [{
+      components: [
+        { name: "ciphertext", type: "uint256" },
+        { name: "ownerCiphertext", type: "uint256" },
+        { name: "spenderCiphertext", type: "uint256" }
+      ],
+      type: "tuple"
+    }],
+    stateMutability: "view",
+    type: "function"
+  },
+
+  // Allowance (account, isSpender)
+  {
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "isSpender", type: "bool" }
+    ],
+    name: "allowance",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
   }
+
 ];
 
 export const ERC721_ABI = [

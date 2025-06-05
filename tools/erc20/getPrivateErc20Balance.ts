@@ -1,6 +1,6 @@
 import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { ctUint, decryptUint } from '@coti-io/coti-sdk-typescript';
+import { decryptUint } from '@coti-io/coti-sdk-typescript';
 import { getCurrentAccountKeys } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
@@ -50,21 +50,6 @@ export function isGetPrivateERC20TokenBalanceArgs(args: unknown): args is {
 }
 
 /**
- * Decrypts a private ERC20 token balance
- * @param balance The encrypted token balance
- * @param AESkey The AES key to decrypt the balance
- * @returns The decrypted token balance
- */
-export const decryptBalance = (balance: ctUint, AESkey: string) => {
-    try {
-      return decryptUint(balance, AESkey);
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-};
-
-/**
  * Handler for the getPrivateERC20Balance tool
  * @param args The arguments for the tool
  * @returns The tool response
@@ -107,7 +92,7 @@ export async function performGetPrivateERC20TokenBalance(account_address: string
         const encryptedBalance = await tokenContract.balanceOf(account_address);
         
         try {
-            const decryptedBalance = decryptBalance(encryptedBalance, currentAccountKeys.aesKey);
+            const decryptedBalance = decryptUint(encryptedBalance, currentAccountKeys.aesKey);
             const formattedBalance = decryptedBalance ? ethers.formatUnits(decryptedBalance, decimalsResult) : "Unable to decrypt";
             
             return `Balance: ${formattedBalance}\nDecimals: ${decimalsResult}\nSymbol: ${symbolResult}\nName: ${nameResult}`;
