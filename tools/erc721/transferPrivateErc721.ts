@@ -25,6 +25,10 @@ export const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
                 type: "string",
                 description: "ID of the NFT token to transfer",
             },
+            from_address: {
+                type: "string",
+                description: "Optional, address to transfer from. If not provided, the current account will be used.",
+            },
             use_safe_transfer: {
                 type: "boolean",
                 description: "Optional, whether to use safeTransferFrom instead of transferFrom. Default is false.",
@@ -44,7 +48,7 @@ export const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
  * @param args The input arguments to check
  * @returns True if the arguments are valid, false otherwise
  */
-export function isTransferPrivateERC721TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, token_id: string, use_safe_transfer?: boolean, gas_limit?: string } {
+export function isTransferPrivateERC721TokenArgs(args: unknown): args is { token_address: string, recipient_address: string, token_id: string, from_address?: string, use_safe_transfer?: boolean, gas_limit?: string } {
     return (
         typeof args === "object" &&
         args !== null &&
@@ -54,8 +58,9 @@ export function isTransferPrivateERC721TokenArgs(args: unknown): args is { token
         typeof (args as { recipient_address: string }).recipient_address === "string" &&
         "token_id" in args &&
         typeof (args as { token_id: string }).token_id === "string" &&
-        (!("use_safe_transfer" in args) || typeof (args as { use_safe_transfer: boolean }).use_safe_transfer === "boolean") &&
-        (!("gas_limit" in args) || typeof (args as { gas_limit: string }).gas_limit === "string")
+        (!("from_address" in args) || typeof (args as { from_address?: string }).from_address === "string" || (args as { from_address?: string }).from_address === undefined) &&
+        (!("use_safe_transfer" in args) || typeof (args as { use_safe_transfer?: boolean }).use_safe_transfer === "boolean" || (args as { use_safe_transfer?: boolean }).use_safe_transfer === undefined) &&
+        (!("gas_limit" in args) || typeof (args as { gas_limit?: string }).gas_limit === "string" || (args as { gas_limit?: string }).gas_limit === undefined)
     );
 }
 
@@ -68,9 +73,9 @@ export async function transferPrivateERC721TokenHandler(args: Record<string, unk
     if (!isTransferPrivateERC721TokenArgs(args)) {
         throw new Error("Invalid arguments for transfer_private_erc721");
     }
-    const { token_address, recipient_address, token_id, use_safe_transfer = false, gas_limit } = args;
+    const { token_address, recipient_address, token_id, from_address, use_safe_transfer = false, gas_limit } = args;
 
-    const results = await performTransferPrivateERC721Token(token_address, recipient_address, token_id, use_safe_transfer, gas_limit);
+    const results = await performTransferPrivateERC721Token(token_address, recipient_address, token_id, use_safe_transfer, gas_limit, from_address);
     return {
         content: [{ type: "text", text: results }],
         isError: false,
@@ -78,15 +83,16 @@ export async function transferPrivateERC721TokenHandler(args: Record<string, unk
 }
 
 /**
- * Transfers a private ERC721 token from the current account to another address
+ * Transfers a private ERC721 token from the specified account to another address
  * @param token_address The address of the ERC721 token contract
  * @param recipient_address The address of the recipient
  * @param token_id The ID of the token to transfer
  * @param use_safe_transfer Whether to use safeTransferFrom instead of transferFrom
  * @param gas_limit Optional gas limit for the transaction
+ * @param from_address Optional address to transfer from. If not provided, the current account will be used
  * @returns A string containing the transaction hash and other information
  */
-export async function performTransferPrivateERC721Token(token_address: string, recipient_address: string, token_id: string, use_safe_transfer: boolean = false, gas_limit?: string) {
+export async function performTransferPrivateERC721Token(token_address: string, recipient_address: string, token_id: string, use_safe_transfer: boolean = false, gas_limit?: string, from_address?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
         const provider = getDefaultProvider(CotiNetwork.Testnet);
@@ -106,16 +112,19 @@ export async function performTransferPrivateERC721Token(token_address: string, r
             txOptions.gasLimit = gas_limit;
         }
 
+        // Use the from_address if provided, otherwise use the wallet address
+        const fromAddress = from_address || wallet.address;
+
         let tx;
         if (use_safe_transfer) {
-            tx = await tokenContract.safeTransferFrom(wallet.address, recipient_address, token_id, txOptions);
+            tx = await tokenContract.safeTransferFrom(fromAddress, recipient_address, token_id, txOptions);
         } else {
-            tx = await tokenContract.transferFrom(wallet.address, recipient_address, token_id, txOptions);
+            tx = await tokenContract.transferFrom(fromAddress, recipient_address, token_id, txOptions);
         }
         
         const receipt = await tx.wait();
         
-        return `Private NFT Transfer Successful!\nToken: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nTransaction Hash: ${receipt?.hash}\nTransfer Method: ${use_safe_transfer ? 'safeTransferFrom' : 'transferFrom'}\nRecipient: ${recipient_address}`;
+        return `Private NFT Transfer Successful!\nToken: ${nameResult} (${symbolResult})\nToken ID: ${token_id}\nTransaction Hash: ${receipt?.hash}\nTransfer Method: ${use_safe_transfer ? 'safeTransferFrom' : 'transferFrom'}\nFrom: ${fromAddress}\nRecipient: ${recipient_address}`;
     } catch (error) {
         console.error('Error transferring private ERC721 token:', error);
         throw new Error(`Failed to transfer private ERC721 token: ${error instanceof Error ? error.message : String(error)}`);

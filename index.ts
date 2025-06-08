@@ -27,6 +27,11 @@ import { GET_PRIVATE_ERC721_TOKEN_OWNER, getPrivateERC721TokenOwnerHandler } fro
 import { GET_PRIVATE_ERC721_TOTAL_SUPPLY, getPrivateERC721TotalSupplyHandler } from "./tools/erc721/getPrivateErc721TotalSupply.js";
 import { DEPLOY_PRIVATE_ERC721_CONTRACT, deployPrivateERC721ContractHandler } from "./tools/erc721/deployPrivateErc721Contract.js";
 import { MINT_PRIVATE_ERC721_TOKEN, mintPrivateERC721TokenHandler } from "./tools/erc721/mintPrivateErc721Token.js";
+import { GET_PRIVATE_ERC721_BALANCE, getPrivateERC721BalanceHandler } from "./tools/erc721/getPrivateErc721Balance.js";
+import { APPROVE_PRIVATE_ERC721, approvePrivateERC721Handler } from "./tools/erc721/approvePrivateErc721.js";
+import { GET_PRIVATE_ERC721_APPROVED, getPrivateERC721ApprovedHandler } from "./tools/erc721/getPrivateErc721Approved.js";
+import { SET_PRIVATE_ERC721_APPROVAL_FOR_ALL, setPrivateERC721ApprovalForAllHandler } from "./tools/erc721/setPrivateErc721ApprovalForAll.js";
+import { GET_PRIVATE_ERC721_IS_APPROVED_FOR_ALL, getPrivateERC721IsApprovedForAllHandler } from "./tools/erc721/getPrivateErc721IsApprovedForAll.js";
 
 // Account tools
 import { CHANGE_DEFAULT_ACCOUNT, changeDefaultAccountHandler } from './tools/account/changeDefaultAccount.js';
@@ -99,11 +104,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         TRANSFER_PRIVATE_ERC20_TOKEN, 
         
         // ERC721 Tools
+        APPROVE_PRIVATE_ERC721,
         DEPLOY_PRIVATE_ERC721_CONTRACT,
+        GET_PRIVATE_ERC721_APPROVED,
+        GET_PRIVATE_ERC721_BALANCE,
+        GET_PRIVATE_ERC721_IS_APPROVED_FOR_ALL,
         GET_PRIVATE_ERC721_TOKEN_OWNER,
         GET_PRIVATE_ERC721_TOKEN_URI,
         GET_PRIVATE_ERC721_TOTAL_SUPPLY,
         MINT_PRIVATE_ERC721_TOKEN,
+        SET_PRIVATE_ERC721_APPROVAL_FOR_ALL,
         TRANSFER_PRIVATE_ERC721_TOKEN,
         
         // Native tools
@@ -161,6 +171,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             case "get_private_erc721_total_supply": {
                 return await getPrivateERC721TotalSupplyHandler(args);
+            }
+            
+            case "get_private_erc721_balance": {
+                return await getPrivateERC721BalanceHandler(args);
+            }
+            
+            case "approve_private_erc721": {
+                return await approvePrivateERC721Handler(args);
+            }
+            
+            case "get_private_erc721_approved": {
+                return await getPrivateERC721ApprovedHandler(args);
+            }
+            
+            case "set_private_erc721_approval_for_all": {
+                return await setPrivateERC721ApprovalForAllHandler(args);
+            }
+            
+            case "get_private_erc721_is_approved_for_all": {
+                return await getPrivateERC721IsApprovedForAllHandler(args);
             }
 
             case "get_private_erc20_total_supply": {

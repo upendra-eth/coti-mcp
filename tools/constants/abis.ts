@@ -368,6 +368,25 @@ export const ERC721_ABI = [
     type: "function"
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address"
+      }
+    ],
+    name: "balanceOf",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256"
+      }
+    ],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
     constant: true,
     inputs: [],
     name: "symbol",
@@ -379,6 +398,47 @@ export const ERC721_ABI = [
     inputs: [],
     name: "name",
     outputs: [{ name: "", type: "string" }],
+    type: "function"
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "tokenId", type: "uint256" }
+    ],
+    name: "approve",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "getApproved",
+    outputs: [{ name: "", type: "address" }],
+    type: "function"
+  },
+  {
+    constant: false,
+    inputs: [
+      { name: "operator", type: "address" },
+      { name: "approved", type: "bool" }
+    ],
+    name: "setApprovalForAll",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    constant: true,
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "operator", type: "address" }
+    ],
+    name: "isApprovedForAll",
+    outputs: [{ name: "", type: "bool" }],
     type: "function"
   },
   {
