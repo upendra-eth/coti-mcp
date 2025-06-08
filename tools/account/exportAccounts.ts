@@ -9,6 +9,13 @@ export const EXPORT_ACCOUNTS: Tool = {
             include_sensitive_data: {
                 type: "boolean",
                 description: "Whether to include sensitive data (private keys and AES keys) in the output. Default is true."
+            },
+            account_addresses: {
+                type: "array",
+                items: {
+                    type: "string"
+                },
+                description: "Optional list of account addresses to export. If not provided, all accounts will be exported."
             }
         }
     }
@@ -16,6 +23,7 @@ export const EXPORT_ACCOUNTS: Tool = {
 
 interface ExportAccountsArgs {
     include_sensitive_data?: boolean;
+    account_addresses?: string[];
 }
 
 /**
@@ -24,23 +32,35 @@ interface ExportAccountsArgs {
  * @returns Whether the arguments match the expected type
  */
 function isExportAccountsArgs(args: Record<string, unknown> | undefined): args is Record<string, unknown> & ExportAccountsArgs {
-    if (!args) return true; // No args is valid
+    if (!args) return true;
     
     if ('include_sensitive_data' in args && typeof args.include_sensitive_data !== 'boolean' && args.include_sensitive_data !== undefined) {
         return false;
+    }
+    
+    if ('account_addresses' in args) {
+        const accountAddresses = args.account_addresses;
+        if (!Array.isArray(accountAddresses)) {
+            return false;
+        }
+        
+        if (accountAddresses.some(addr => typeof addr !== 'string')) {
+            return false;
+        }
     }
     
     return true;
 }
 
 /**
- * Exports all available COTI accounts to a JSON string
+ * Exports COTI accounts to a JSON string
  * @param args The arguments for the export
- * @returns 
+ * @returns A formatted string with the exported accounts
  */
 export async function performExportAccounts(args: ExportAccountsArgs): Promise<string> {
     try {
         const includeSensitiveData = args.include_sensitive_data !== false; // Default to true if not specified
+        const specificAddresses = args.account_addresses || [];
         
         const publicKeys = (process.env.COTI_MCP_PUBLIC_KEY || '').split(',').filter(Boolean);
         const privateKeys = (process.env.COTI_MCP_PRIVATE_KEY || '').split(',').filter(Boolean);
@@ -51,13 +71,33 @@ export async function performExportAccounts(args: ExportAccountsArgs): Promise<s
             return "No COTI accounts configured in the environment. Nothing to export.";
         }
         
-        const accounts = publicKeys.map((publicKey, i) => {
-            const privateKey = includeSensitiveData ? (privateKeys[i] || "") : "[REDACTED]";
+        let filteredIndices: number[] = [];
+        
+        if (specificAddresses.length > 0) {
+            const normalizedSpecificAddresses = specificAddresses.map(addr => addr.toLowerCase());
+            filteredIndices = publicKeys
+                .map((addr, index) => ({ addr: addr.toLowerCase(), index }))
+                .filter(item => normalizedSpecificAddresses.includes(item.addr))
+                .map(item => item.index)
+        }
+
+        if (filteredIndices.length === 0) {
+            filteredIndices = publicKeys.map((_, index) => index);
+        }
+
+        const accounts = filteredIndices.map(i => {
+            let privateKey: string;
+            if (!includeSensitiveData) {
+                privateKey = "[REDACTED]";
+            } else {
+                privateKey = privateKeys[i] || "";
+            }
+            
             const aesKey = includeSensitiveData ? (aesKeys[i] || "") : "[REDACTED]";
-            const isDefault = publicKey === currentAccount;
+            const isDefault = publicKeys[i] === currentAccount;
             
             return {
-                address: publicKey,
+                address: publicKeys[i],
                 private_key: privateKey,
                 aes_key: aesKey,
                 is_default: isDefault
@@ -70,7 +110,18 @@ export async function performExportAccounts(args: ExportAccountsArgs): Promise<s
         };
         
         const jsonString = JSON.stringify(backupData, null, 2);
-        return `=== COTI ACCOUNTS BACKUP (JSON FORMAT) ===\n\n${jsonString}\n\n${includeSensitiveData ? "WARNING: This backup contains sensitive information. Keep it secure and do not share it." : ""}`;
+        
+        let header = "=== COTI ACCOUNTS BACKUP (JSON FORMAT) ===\n\n";
+        if (specificAddresses.length > 0) {
+            header = `=== COTI ACCOUNTS BACKUP (${accounts.length} of ${publicKeys.length} accounts) ===\n\n`;
+        }
+        
+        let footer = "";
+        if (includeSensitiveData) {
+            footer = "\nWARNING: This backup contains sensitive information. Keep it secure and do not share it.";
+        }
+        
+        return `${header}${jsonString}${footer}`;
     } catch (error) {
         console.error('Error exporting accounts:', error);
         throw new Error(`Failed to export accounts: ${error instanceof Error ? error.message : String(error)}`);

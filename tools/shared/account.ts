@@ -41,3 +41,14 @@ export function getCurrentAccountKeys(): AccountKeys {
     return getAccountKeys(process.env.COTI_MCP_CURRENT_PUBLIC_KEY);
 }
 
+/**
+ * Masks a sensitive string by showing only the first 4 and last 4 characters
+ * @param str The string to mask
+ * @returns The masked string
+ */
+export function maskSensitiveString(str: string): string {
+    if (!str || str.length <= 8) {
+        return "****";
+    }
+    return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
+}

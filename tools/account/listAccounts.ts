@@ -1,4 +1,5 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { maskSensitiveString } from "../shared/account.js";
 
 export const LIST_ACCOUNTS: Tool = {
     name: "list_accounts",
@@ -8,18 +9,6 @@ export const LIST_ACCOUNTS: Tool = {
         properties: {}
     }
 };
-
-/**
- * Masks a sensitive string by showing only the first 4 and last 4 characters
- * @param str The string to mask
- * @returns The masked string
- */
-function maskSensitiveString(str: string): string {
-    if (!str || str.length <= 8) {
-        return "****";
-    }
-    return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
-}
 
 /**
  * Lists all available COTI accounts configured in the environment.
