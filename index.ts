@@ -44,6 +44,7 @@ import { IMPORT_ACCOUNTS, importAccountsHandler } from './tools/account/importAc
 // Encryption tools
 import { ENCRYPT_VALUE, encryptValueHandler } from "./tools/account/encryptValue.js";
 import { DECRYPT_VALUE, decryptValueHandler } from "./tools/account/decryptValue.js";
+import { SIGN_MESSAGE, signMessageHandler } from "./tools/account/signMessage.js";
 
 // Transaction tools
 import { GET_TRANSACTION_STATUS, getTransactionStatusHandler } from "./tools/transaction/getTransactionStatus.js";
@@ -92,6 +93,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GENERATE_AES_KEY,
         IMPORT_ACCOUNTS,
         LIST_ACCOUNTS,
+        SIGN_MESSAGE,
 
         // ERC20 Tools
         APPROVE_ERC20_SPENDER,
@@ -247,6 +249,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             case "import_accounts": {
                 return await importAccountsHandler(args);
+            }
+            
+            case "sign_message": {
+                return await signMessageHandler(args);
             }
 
             case "get_transaction_status": {
