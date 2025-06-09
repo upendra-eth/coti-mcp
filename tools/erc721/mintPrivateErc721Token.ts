@@ -23,7 +23,7 @@ export const MINT_PRIVATE_ERC721_TOKEN: Tool = {
             },
             token_uri: {
                 type: "string",
-                description: "URI for the token metadata (can be IPFS URI or any other URI)",
+                description: "URI for the token metadata (can be IPFS URI or any other URI), Example: \"https://example.com/token/0\"",
             },
             gas_limit: {
                 type: "string",
