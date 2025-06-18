@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider, CotiNetwork, Contract, Wallet } from "@coti-io/coti-ethers";
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getDefaultProvider, Contract, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
 export const MINT_PRIVATE_ERC20_TOKEN: Tool = {
@@ -81,7 +81,7 @@ export async function mintPrivateERC20TokenHandler(args: Record<string, unknown>
 export async function performMintPrivateERC20Token(token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         wallet.setAesKey(currentAccountKeys.aesKey);

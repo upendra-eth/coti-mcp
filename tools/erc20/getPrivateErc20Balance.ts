@@ -1,7 +1,7 @@
-import { CotiNetwork, getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
+import { getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { decryptUint } from '@coti-io/coti-sdk-typescript';
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
 export const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
@@ -76,7 +76,7 @@ export async function getPrivateERC20BalanceHandler(args: Record<string, unknown
 export async function performGetPrivateERC20TokenBalance(account_address: string, token_address: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
 
         wallet.setAesKey(currentAccountKeys.aesKey)

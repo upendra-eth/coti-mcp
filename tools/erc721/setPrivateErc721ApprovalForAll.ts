@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { Contract, getDefaultProvider, Wallet, CotiNetwork } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
 
 export const SET_PRIVATE_ERC721_APPROVAL_FOR_ALL: Tool = {
@@ -88,7 +88,7 @@ export async function performSetPrivateERC721ApprovalForAll(
     gas_limit?: string
 ) {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();
         
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);

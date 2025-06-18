@@ -1,7 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider } from "@coti-io/coti-ethers/dist/utils/network.js";
-import { CotiNetwork, ethers, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { ethers, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
 
 export const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
@@ -75,7 +74,7 @@ export async function deployPrivateERC721ContractHandler(args: Record<string, un
 export async function performDeployPrivateERC721Contract(name: string, symbol: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         wallet.setAesKey(currentAccountKeys.aesKey);

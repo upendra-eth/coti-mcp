@@ -1,5 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, ethers } from '@coti-io/coti-ethers';
+import { getDefaultProvider, ethers } from '@coti-io/coti-ethers';
+import { getNetwork } from "../shared/account.js";
 
 export const GET_NATIVE_BALANCE: Tool = {
     name: "get_native_balance",
@@ -42,7 +43,7 @@ export async function getNativeBalanceHandler(args: Record<string, unknown> | un
  */
 export async function performGetNativeBalance(account_address: string): Promise<string> {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const balance = await provider.getBalance(account_address);
         return `Account: ${account_address}\nBalance: ${balance} wei (${ethers.formatEther(balance)} COTI)`;
     } catch (error) {

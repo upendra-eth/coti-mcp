@@ -1,5 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { maskSensitiveString } from "../shared/account.js";
+import { getNetwork } from "../shared/account.js";
 
 export const LIST_ACCOUNTS: Tool = {
     name: "list_accounts",
@@ -25,7 +26,7 @@ export async function performListAccounts(): Promise<string> {
             return "No COTI accounts configured in the environment.";
         }
         
-        let result = "Available COTI Accounts:\n\n";
+        let result = "Available COTI Accounts on " + getNetwork() + ":\n\n";
         result += "======================\n\n";
         
         for (let i = 0; i < publicKeys.length; i++) {

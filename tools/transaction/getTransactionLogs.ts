@@ -1,5 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider, CotiNetwork } from "@coti-io/coti-ethers";
+import { getDefaultProvider } from "@coti-io/coti-ethers";
+import { getNetwork } from "../shared/account.js";
 
 export const GET_TRANSACTION_LOGS: Tool = {
     name: "get_transaction_logs",
@@ -41,7 +42,7 @@ export function isGetTransactionLogsArgs(args: unknown): args is { transaction_h
  */
 export async function performGetTransactionLogs(transaction_hash: string): Promise<string> {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         let receipt;
         try {
             receipt = await provider.getTransactionReceipt(transaction_hash);

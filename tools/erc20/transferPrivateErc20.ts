@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, Wallet, Contract } from '@coti-io/coti-ethers';
+import { getDefaultProvider, Wallet, Contract } from '@coti-io/coti-ethers';
 import { buildInputText } from '@coti-io/coti-sdk-typescript';
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
 /**
@@ -86,7 +86,7 @@ export async function transferPrivateERC20TokenHandler(args: Record<string, unkn
 export async function performTransferPrivateERC20Token(token_address: string, recipient_address: string, amount_wei: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         wallet.setAesKey(currentAccountKeys.aesKey);

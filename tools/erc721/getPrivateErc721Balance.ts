@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { Contract, getDefaultProvider, Wallet, CotiNetwork } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
 
 export const GET_PRIVATE_ERC721_BALANCE: Tool = {
@@ -68,7 +68,7 @@ export async function getPrivateERC721BalanceHandler(args: Record<string, unknow
  */
 export async function performGetPrivateERC721Balance(token_address: string, account_address: string) {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();
         
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);

@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider, CotiNetwork, Wallet, Contract } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { ERC20_ABI, ERC721_ABI } from "../constants/abis.js";
 
 export const CALL_CONTRACT_FUNCTION: Tool = {
@@ -65,7 +65,7 @@ export function isCallContractFunctionArgs(args: unknown): args is { contract_ad
 export async function performCallContractFunction(contract_address: string, function_name: string, function_args: string[], abi?: string): Promise<string> {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         wallet.setAesKey(currentAccountKeys.aesKey);

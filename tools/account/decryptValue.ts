@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 
 export const DECRYPT_VALUE: Tool = {
     name: "decrypt_value",
@@ -42,7 +42,7 @@ export function isDecryptValueArgs(args: unknown): args is { ciphertext: string 
 export async function performDecryptValue(ciphertext: bigint) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         const decryptedMessage = await wallet.decryptValue(ciphertext);

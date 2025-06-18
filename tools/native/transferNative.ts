@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { CotiNetwork, getDefaultProvider, Wallet } from '@coti-io/coti-ethers';
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getDefaultProvider, Wallet } from '@coti-io/coti-ethers';
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 
 export const TRANSFER_NATIVE: Tool = {
     name: "transfer_native",
@@ -39,7 +39,7 @@ export const TRANSFER_NATIVE: Tool = {
 export async function performTransferNative(recipient_address: string, amount_wei: string, gas_limit?: string): Promise<string> {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         const txOptions: any = {};

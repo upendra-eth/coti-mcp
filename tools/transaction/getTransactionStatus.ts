@@ -1,6 +1,6 @@
-import { getDefaultProvider } from "@coti-io/coti-ethers";
+import { ethers, getDefaultProvider } from "@coti-io/coti-ethers";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { ethers, CotiNetwork } from "@coti-io/coti-ethers";
+import { getNetwork } from "../shared/account.js";
 
 export const GET_TRANSACTION_STATUS: Tool = {
     name: "get_transaction_status",
@@ -42,7 +42,7 @@ export function isGetTransactionStatusArgs(args: unknown): args is { transaction
  */
 export async function performGetTransactionStatus(transaction_hash: string): Promise<string> {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const receipt = await provider.getTransactionReceipt(transaction_hash);
         const tx = await provider.getTransaction(transaction_hash);
         

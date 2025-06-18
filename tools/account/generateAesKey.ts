@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
-import { getAccountKeys } from "../shared/account.js";
+import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
+import { getAccountKeys, getNetwork } from "../shared/account.js";
 
 export const GENERATE_AES_KEY: Tool = {
     name: "generate_aes_key",
@@ -37,7 +37,7 @@ export function isGenerateAesKeyArgs(args: unknown): args is { account_address: 
 export async function performGenerateAesKey(account_address: string): Promise<string> {
     try {
         const currentAccountKeys = getAccountKeys(account_address);
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
 
         await wallet.generateOrRecoverAes();

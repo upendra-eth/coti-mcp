@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 
 export const ENCRYPT_VALUE: Tool = {
     name: "encrypt_value",
@@ -57,7 +57,7 @@ export function isEncryptValueArgs(args: unknown): args is { message: string, co
 export async function performEncryptValue(message: bigint | number | string, contractAddress: string, functionSelector: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         const encryptedMessage = await wallet.encryptValue(message, contractAddress, functionSelector);

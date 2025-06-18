@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider, CotiNetwork, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 
 export const SIGN_MESSAGE: Tool = {
     name: "sign_message",
@@ -43,7 +43,7 @@ export function isSignMessageArgs(args: unknown): args is { message: string } {
 export async function performSignMessage(message: string): Promise<string> {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         // Sign the message

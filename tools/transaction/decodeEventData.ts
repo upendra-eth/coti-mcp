@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
-import { getDefaultProvider, Wallet, ethers, CotiNetwork } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { getDefaultProvider, Wallet, ethers } from "@coti-io/coti-ethers";
 import { ERC20_ABI, ERC721_ABI } from "../constants/abis.js";
 
 export const DECODE_EVENT_DATA: Tool = {
@@ -55,7 +55,7 @@ export function isDecodeEventDataArgs(args: unknown): args is { topics: string[]
  */
 export async function performDecodeEventData(topics: string[], data: string, abi?: string): Promise<string> {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         const standardAbis = [...ERC20_ABI, ...ERC721_ABI];

@@ -1,6 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider, CotiNetwork, Contract, ethers, Wallet } from "@coti-io/coti-ethers";
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getDefaultProvider, Contract, ethers, Wallet } from "@coti-io/coti-ethers";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
 export const GET_PRIVATE_ERC20_TOTAL_SUPPLY: Tool = {
@@ -61,7 +61,7 @@ export async function getPrivateERC20TotalSupplyHandler(args: Record<string, unk
  */
 export async function performGetPrivateERC20TotalSupply(token_address: string) {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();
         
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);

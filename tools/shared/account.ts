@@ -1,3 +1,5 @@
+import { CotiNetwork } from "@coti-io/coti-ethers";
+
 export interface AccountKeys {
     privateKey: string;
     aesKey: string;
@@ -51,4 +53,23 @@ export function maskSensitiveString(str: string): string {
         return "****";
     }
     return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
+}
+
+export function getNetwork(): CotiNetwork {
+    try {
+        const network = process.env.COTI_MCP_NETWORK?.toLowerCase();
+    
+        if (network !== 'testnet' && network !== 'mainnet') {
+            throw new Error('Invalid network');
+        }
+
+        if (network === 'mainnet') {
+            return CotiNetwork.Mainnet;
+        }
+
+        return CotiNetwork.Testnet;
+    } catch (error) {
+        console.error('Error getting network:', error);
+        throw new Error(`Failed to get network: ${error instanceof Error ? error.message : String(error)}`);
+    }
 }

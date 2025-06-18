@@ -1,7 +1,6 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider } from "@coti-io/coti-ethers";
-import { CotiNetwork } from "@coti-io/coti-ethers";
-import { Wallet } from "@coti-io/coti-ethers";
+import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
+import { getNetwork } from "../shared/account.js";
 
 export const CREATE_ACCOUNT: Tool = {
     name: "create_account",
@@ -37,7 +36,7 @@ export function isCreateAccountArgs(args: unknown): args is { set_as_default?: b
  */
 export async function performCreateAccount(set_as_default: boolean = false): Promise<string> {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const newWallet = Wallet.createRandom(provider);
         
         const privateKey = newWallet.privateKey;

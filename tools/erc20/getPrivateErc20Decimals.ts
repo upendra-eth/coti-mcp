@@ -1,6 +1,6 @@
-import { getDefaultProvider, Wallet, Contract, CotiNetwork } from "@coti-io/coti-ethers";
+import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 
 export const GET_PRIVATE_ERC20_DECIMALS: Tool = {
@@ -61,7 +61,7 @@ export async function getPrivateERC20DecimalsHandler(args: Record<string, unknow
  */
 export async function performGetPrivateERC20Decimals(token_address: string) {
     try {
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();
         
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);

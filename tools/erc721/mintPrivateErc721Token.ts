@@ -1,8 +1,8 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getDefaultProvider, CotiNetwork, Wallet, Contract } from "@coti-io/coti-ethers";
+import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { buildStringInputText } from "@coti-io/coti-sdk-typescript";
 import { ERC721_ABI } from "../constants/abis.js";
-import { getCurrentAccountKeys } from "../shared/account.js";
+import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 
 export const MINT_PRIVATE_ERC721_TOKEN: Tool = {
     name: "mint_private_erc721_token",
@@ -82,7 +82,7 @@ export async function mintPrivateERC721TokenHandler(args: Record<string, unknown
 export async function performMintPrivateERC721Token(token_address: string, to_address: string, token_uri: string, gas_limit?: string) {
     try {
         const currentAccountKeys = getCurrentAccountKeys();
-        const provider = getDefaultProvider(CotiNetwork.Testnet);
+        const provider = getDefaultProvider(getNetwork());
         const wallet = new Wallet(currentAccountKeys.privateKey, provider);
         
         wallet.setAesKey(currentAccountKeys.aesKey);
