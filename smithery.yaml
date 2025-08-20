@@ -26,7 +26,6 @@ startCommand:
         type: string
         title: "Network"
         description: "COTI MCP network to connect to."
-        enum: ["Testnet", "Mainnet"]
         default: "Testnet"
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
