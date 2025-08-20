@@ -83,6 +83,12 @@ if (!COTI_MCP_PUBLIC_KEY) {
     process.exit(1);
 }
 
+const COTI_MCP_NETWORK = process.env.COTI_MCP_NETWORK!;
+if (!COTI_MCP_NETWORK) {
+    console.error("Error: COTI_MCP_NETWORK environment variable is required");
+    process.exit(1);
+}
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
         // Account tools
