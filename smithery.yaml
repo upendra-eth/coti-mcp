@@ -22,7 +22,6 @@ startCommand:
       cotiMcpNetwork:
         type: string
         description: COTI MCP network to connect to.
-        default: "Testnet"
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
