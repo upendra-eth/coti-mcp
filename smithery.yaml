@@ -8,7 +8,6 @@ startCommand:
       - cotiMcpAesKey
       - cotiMcpPrivateKey
       - cotiMcpPublicKey
-      - cotiMcpNetwork
     properties:
       cotiMcpAesKey:
         type: string
@@ -22,6 +21,7 @@ startCommand:
       cotiMcpNetwork:
         type: string
         description: COTI MCP network to connect to.
+        default: testnet
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
@@ -39,4 +39,4 @@ startCommand:
     cotiMcpAesKey: YOUR_COTI_MCP_AES_KEY_HERE
     cotiMcpPublicKey: YOUR_COTI_MCP_PUBLIC_KEY_HERE
     cotiMcpPrivateKey: YOUR_COTI_MCP_PRIVATE_KEY_HERE
-    cotiMcpNetwork: Testnet
+    cotiMcpNetwork: testnet
