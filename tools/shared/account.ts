@@ -59,10 +59,6 @@ export function getNetwork(): CotiNetwork {
     try {
         const network = process.env.COTI_MCP_NETWORK?.toLowerCase();
     
-        if (network !== 'testnet' && network !== 'mainnet') {
-            throw new Error('Invalid network');
-        }
-
         if (network === 'mainnet') {
             return CotiNetwork.Mainnet;
         }
