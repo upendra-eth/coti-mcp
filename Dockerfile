@@ -23,6 +23,7 @@ RUN chmod +x build/index.js
 ENV COTI_MCP_AES_KEY=""
 ENV COTI_MCP_PRIVATE_KEY=""
 ENV COTI_MCP_PUBLIC_KEY=""
+ENV COTI_MCP_NETWORK=""
 
 # Command to run the MCP server
 CMD ["node", "build/index.js"]
