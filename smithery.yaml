@@ -12,19 +12,22 @@ startCommand:
     properties:
       cotiMcpAesKey:
         type: string
+        title: AES Key
         description: COTI MCP AES key for encrypting values.
       cotiMcpPrivateKey:
         type: string
+        title: Private Key
         description: COTI MCP private key for signing transactions.
       cotiMcpPublicKey:
         type: string
+        title: Public Key
         description: COTI MCP public key that corresponds to the private key.
       cotiMcpNetwork:
         type: string
+        title: Network
         description: COTI MCP network to connect to.
-        enum:
-          - Testnet
-          - Mainnet
+        enum: ["Testnet", "Mainnet"]
+        default: "Testnet"
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
