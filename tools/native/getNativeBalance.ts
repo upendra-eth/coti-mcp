@@ -1,20 +1,15 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, ethers } from '@coti-io/coti-ethers';
 import { getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const GET_NATIVE_BALANCE: Tool = {
+export const GET_NATIVE_BALANCE: ToolAnnotations = {
+    title: "Get Native Balance",
     name: "get_native_balance",
     description:
         "Get the native COTI token balance of a COTI blockchain account. This is used for checking the current balance of a COTI account. Requires a COTI account address as input. Returns the account balance in COTI tokens.",
     inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-        },
-        required: ["account_address"],
+        account_address: z.string().describe("COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
     },
 };
 
@@ -23,7 +18,7 @@ export const GET_NATIVE_BALANCE: Tool = {
  * @param args The arguments to get the balance for
  * @returns The native COTI token balance of the account
  */
-export async function getNativeBalanceHandler(args: Record<string, unknown> | undefined) {
+export async function getNativeBalanceHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetNativeBalanceArgs(args)) {
         throw new Error("Invalid arguments for get_native_balance");
     }

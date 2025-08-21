@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
+export const GET_PRIVATE_ERC721_TOTAL_SUPPLY: ToolAnnotations = {
+    title: "Get Private ERC721 Total Supply",
     name: "get_private_erc721_total_supply",
     description:
         "Get the total supply of tokens for a private ERC721 NFT collection on the COTI blockchain. " +
@@ -11,14 +13,7 @@ export const GET_PRIVATE_ERC721_TOTAL_SUPPLY: Tool = {
         "Requires token contract address as input. " +
         "Returns the total number of tokens in the collection.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-        },
-        required: ["token_address"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
     },
 };
 
@@ -41,7 +36,7 @@ export function isGetPrivateERC721TotalSupplyArgs(args: unknown): args is { toke
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getPrivateERC721TotalSupplyHandler(args: Record<string, unknown> | undefined) {
+export async function getPrivateERC721TotalSupplyHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetPrivateERC721TotalSupplyArgs(args)) {
         throw new Error("Invalid arguments for get_private_erc721_total_supply");
     }

@@ -1,38 +1,21 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { ERC20_ABI, ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const CALL_CONTRACT_FUNCTION: Tool = {
+export const CALL_CONTRACT_FUNCTION: ToolAnnotations = {
+    title: "Call Contract Function",
     name: "call_contract_function",
     description:
         "Call a read-only function on any smart contract on the COTI blockchain. " +
         "This allows retrieving data from any contract by specifying the contract address, function name, and parameters. " +
         "Returns the function result in a human-readable format.",
     inputSchema: {
-        type: "object",
-        properties: {
-            contract_address: {
-                type: "string",
-                description: "Address of the smart contract to call",
-            },
-            function_name: {
-                type: "string",
-                description: "Name of the function to call on the contract",
-            },
-            function_args: {
-                type: "array",
-                description: "Array of arguments to pass to the function (can be empty if function takes no arguments)",
-                items: {
-                    type: "string"
-                }
-            },
-            abi: {
-                type: "string",
-                description: "Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs.",
-            },
-        },
-        required: ["contract_address", "function_name", "function_args"],
+        contract_address: z.string().describe("Address of the smart contract to call"),
+        function_name: z.string().describe("Name of the function to call on the contract"),
+        function_args: z.array(z.string()).describe("Array of arguments to pass to the function (can be empty if function takes no arguments)"),
+        abi: z.string().optional().describe("Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs."),
     },
 };
 
@@ -144,7 +127,7 @@ export async function performCallContractFunction(contract_address: string, func
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function callContractFunctionHandler(args: Record<string, unknown> | undefined) {
+export async function callContractFunctionHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isCallContractFunctionArgs(args)) {
         throw new Error("Invalid arguments for call_contract_function");
     }

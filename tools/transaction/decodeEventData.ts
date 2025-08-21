@@ -1,31 +1,17 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { getDefaultProvider, Wallet, ethers } from "@coti-io/coti-ethers";
 import { ERC20_ABI, ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const DECODE_EVENT_DATA: Tool = {
+export const DECODE_EVENT_DATA: ToolAnnotations = {
+    title: "Decode Event Data",
     name: "decode_event_data",
     description: "Decode event data from a transaction log based on the event signature. This helps interpret the raw data in transaction logs by matching the event signature to known event types and decoding the parameters. Requires event signature, topics, and data from a transaction log.",
     inputSchema: {
-        type: "object",
-        properties: {
-            topics: {
-                type: "array",
-                items: {
-                    type: "string"
-                },
-                description: "Array of topics from the transaction log",
-            },
-            data: {
-                type: "string",
-                description: "Data field from the transaction log",
-            },
-            abi: {
-                type: "string",
-                description: "Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs.",
-            },
-        },
-        required: ["topics", "data"],
+        topics: z.array(z.string()).describe("Array of topics from the transaction log"),
+        data: z.string().describe("Data field from the transaction log"),
+        abi: z.string().optional().describe("Optional JSON string representation of the contract ABI. If not provided, will attempt to use standard ERC20/ERC721 ABIs."),
     },
 };
 
@@ -103,7 +89,7 @@ export async function performDecodeEventData(topics: string[], data: string, abi
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function decodeEventDataHandler(args: Record<string, unknown> | undefined) {
+export async function decodeEventDataHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isDecodeEventDataArgs(args)) {
         throw new Error("Invalid arguments for decode_event_data");
     }

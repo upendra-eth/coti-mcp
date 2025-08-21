@@ -1,13 +1,15 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
 import { decryptUint } from "@coti-io/coti-sdk-typescript";
+import { z } from "zod";
 
 /**
  * Tool definition for checking ERC20 token allowance on the COTI blockchain
  */
-export const GET_ERC20_ALLOWANCE: Tool = {
+export const GET_ERC20_ALLOWANCE: ToolAnnotations = {
+    title: "Get ERC20 Allowance",
     name: "get_erc20_allowance",
     description:
         "Check how many tokens a spender is allowed to use. " +
@@ -15,22 +17,9 @@ export const GET_ERC20_ALLOWANCE: Tool = {
         "Requires token contract address, owner address, and spender address as input. " +
         "Returns the allowance amount.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-            owner_address: {
-                type: "string",
-                description: "Address of the token owner",
-            },
-            spender_address: {
-                type: "string",
-                description: "Address of the spender to check allowance for",
-            },
-        },
-        required: ["token_address", "owner_address", "spender_address"],
+        token_address: z.string().describe("ERC20 token contract address on COTI blockchain"),
+        owner_address: z.string().describe("Address of the token owner"),
+        spender_address: z.string().describe("Address of the spender to check allowance for"),
     },
 };
 
@@ -57,7 +46,7 @@ export function isGetERC20AllowanceArgs(args: unknown): args is { token_address:
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getERC20AllowanceHandler(args: Record<string, unknown> | undefined) {
+export async function getERC20AllowanceHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetERC20AllowanceArgs(args)) {
         throw new Error("Invalid arguments for get_erc20_allowance");
     }

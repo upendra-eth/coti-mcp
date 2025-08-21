@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const GET_PRIVATE_ERC721_IS_APPROVED_FOR_ALL: Tool = {
+export const GET_PRIVATE_ERC721_IS_APPROVED_FOR_ALL: ToolAnnotations = {
+    title: "Get Private ERC721 Is Approved For All",
     name: "get_private_erc721_is_approved_for_all",
     description:
         "Check if an operator is approved to transfer all private ERC721 NFT tokens on the COTI blockchain. " +
@@ -11,22 +13,9 @@ export const GET_PRIVATE_ERC721_IS_APPROVED_FOR_ALL: Tool = {
         "Requires token contract address, owner address, and operator address as input. " +
         "Returns whether the operator is approved for all NFTs.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            owner_address: {
-                type: "string",
-                description: "Address of the token owner",
-            },
-            operator_address: {
-                type: "string",
-                description: "Address of the operator to check approval for",
-            },
-        },
-        required: ["token_address", "owner_address", "operator_address"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        owner_address: z.string().describe("Address of the token owner"),
+        operator_address: z.string().describe("Address of the operator to check approval for"),
     },
 };
 
@@ -55,7 +44,7 @@ export function isGetPrivateERC721IsApprovedForAllArgs(
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getPrivateERC721IsApprovedForAllHandler(args: Record<string, unknown> | undefined) {
+export async function getPrivateERC721IsApprovedForAllHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetPrivateERC721IsApprovedForAllArgs(args)) {
         throw new Error("Invalid arguments for get_private_erc721_is_approved_for_all");
     }

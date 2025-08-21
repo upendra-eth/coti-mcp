@@ -1,18 +1,13 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getAccountKeys } from "../shared/account.js";
+import { z } from "zod";
 
-export const CHANGE_DEFAULT_ACCOUNT: Tool = {
+export const CHANGE_DEFAULT_ACCOUNT: ToolAnnotations = {
+    title: "Change Default Account",
     name: "change_default_account",
     description: "Change the default account used for COTI blockchain operations. This allows switching between different accounts configured in the environment. The account must be configured in the environment variables with corresponding private and AES keys. Returns the new default account address upon successful change.",
     inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "COTI account address to set as default, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"
-            }
-        },
-        required: ["account_address"]
+        account_address: z.string().describe("COTI account address to set as default, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
     }
 };
 
@@ -65,7 +60,7 @@ export async function changeDefaultAccountHandler(args: Record<string, unknown> 
 
     const results = await performChangeDefaultAccount(account_address);
     return {
-        content: [{ type: "text", text: results }],
+        content: [{ type: "text" as const, text: results }],
         isError: false,
     };
 }

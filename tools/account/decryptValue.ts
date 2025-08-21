@@ -1,22 +1,17 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
+import { z } from "zod";
 
-export const DECRYPT_VALUE: Tool = {
+export const DECRYPT_VALUE: ToolAnnotations = {
+    title: "Decrypt Value",
     name: "decrypt_value",
     description:
         "Decrypt a value using the COTI AES key. " +
         "Requires a ciphertext as input. " +
         "Returns the decrypted value.",
     inputSchema: {
-        type: "object",
-        properties: {
-            ciphertext: {
-                type: "string",
-                description: "Ciphertext to decrypt",
-            },
-        },
-        required: ["ciphertext"],
+        ciphertext: z.string().describe("Ciphertext to decrypt"),
     },
 };
 
@@ -25,12 +20,12 @@ export const DECRYPT_VALUE: Tool = {
  * @param args The arguments to check.
  * @returns True if the arguments are valid, false otherwise.
  */
-export function isDecryptValueArgs(args: unknown): args is { ciphertext: string } {
+export function isDecryptValueArgs(args: unknown): args is { ciphertext: bigint } {
     return (
         typeof args === "object" &&
         args !== null &&
         "ciphertext" in args &&
-        typeof (args as { ciphertext: string }).ciphertext === "string"
+        typeof (args as { ciphertext: bigint }).ciphertext === "bigint"
     );
 }
 
@@ -59,7 +54,7 @@ export async function performDecryptValue(ciphertext: bigint) {
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function decryptValueHandler(args: Record<string, unknown> | undefined) {
+export async function decryptValueHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isDecryptValueArgs(args)) {
         throw new Error("Invalid arguments for decrypt_value");
     }

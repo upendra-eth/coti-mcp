@@ -1,13 +1,14 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet, Contract } from '@coti-io/coti-ethers';
 import { buildInputText } from '@coti-io/coti-sdk-typescript';
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
 /**
  * Tool definition for transferring private ERC20 tokens on the COTI blockchain
  */
-export const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
+export const TRANSFER_PRIVATE_ERC20_TOKEN: ToolAnnotations = {
     name: "transfer_private_erc20",
     description:
         "Transfer private ERC20 tokens on the COTI blockchain. " +
@@ -15,26 +16,10 @@ export const TRANSFER_PRIVATE_ERC20_TOKEN: Tool = {
         "Requires token contract address, recipient address, and amount as input. " +
         "Returns the transaction hash upon successful transfer.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-            recipient_address: {
-                type: "string",
-                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of tokens to transfer (in Wei)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "recipient_address", "amount_wei"],
+        token_address: z.string().describe("ERC20 token contract address on COTI blockchain"),
+        recipient_address: z.string().describe("Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        amount_wei: z.string().describe("Amount of tokens to transfer (in Wei)"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction"),
     },
 };
 
@@ -62,7 +47,7 @@ export function isTransferPrivateERC20TokenArgs(args: unknown): args is { token_
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function transferPrivateERC20TokenHandler(args: Record<string, unknown> | undefined) {
+export async function transferPrivateERC20TokenHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isTransferPrivateERC20TokenArgs(args)) {
         throw new Error("Invalid arguments for transfer_private_erc20");
     }

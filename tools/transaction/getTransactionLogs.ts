@@ -1,8 +1,10 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider } from "@coti-io/coti-ethers";
 import { getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const GET_TRANSACTION_LOGS: Tool = {
+export const GET_TRANSACTION_LOGS: ToolAnnotations = {
+    title: "Get Transaction Logs",
     name: "get_transaction_logs",
     description:
         "Get the logs from a transaction on the COTI blockchain. " +
@@ -10,14 +12,7 @@ export const GET_TRANSACTION_LOGS: Tool = {
         "Requires a transaction hash as input. " +
         "Returns detailed information about the transaction logs including event names, topics, and data.",
     inputSchema: {
-        type: "object",
-        properties: {
-            transaction_hash: {
-                type: "string",
-                description: "Transaction hash to get logs for",
-            }
-        },
-        required: ["transaction_hash"],
+        transaction_hash: z.string().describe("Transaction hash to get logs for"),
     },
 };
 
@@ -99,7 +94,7 @@ export async function performGetTransactionLogs(transaction_hash: string): Promi
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getTransactionLogsHandler(args: Record<string, unknown> | undefined) {
+export async function getTransactionLogsHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetTransactionLogsArgs(args)) {
         throw new Error("Invalid arguments for get_transaction_logs");
     }

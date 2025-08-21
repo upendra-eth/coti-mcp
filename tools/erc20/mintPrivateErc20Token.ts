@@ -1,35 +1,21 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Contract, Wallet } from "@coti-io/coti-ethers";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const MINT_PRIVATE_ERC20_TOKEN: Tool = {
+export const MINT_PRIVATE_ERC20_TOKEN: ToolAnnotations = {
+    title: "Mint Private ERC20 Token",
     name: "mint_private_erc20_token",
     description:
         "Mint additional private ERC20 tokens on the COTI blockchain. " +
         "This adds new tokens to the specified recipient address. " +
         "Returns the transaction hash upon successful minting.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-            recipient_address: {
-                type: "string",
-                description: "Address to receive the minted tokens",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of tokens to mint in wei (smallest unit)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the minting transaction",
-            },
-        },
-        required: ["token_address", "recipient_address", "amount_wei"],
+        token_address: z.string().describe("ERC20 token contract address on COTI blockchain"),
+        recipient_address: z.string().describe("Address to receive the minted tokens"),
+        amount_wei: z.string().describe("Amount of tokens to mint in wei (smallest unit)"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the minting transaction"),
     },
 };
 
@@ -57,7 +43,7 @@ export function isMintPrivateERC20TokenArgs(args: unknown): args is { token_addr
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function mintPrivateERC20TokenHandler(args: Record<string, unknown> | undefined) {
+export async function mintPrivateERC20TokenHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isMintPrivateERC20TokenArgs(args)) {
         throw new Error("Invalid arguments for mint_private_erc20_token");
     }

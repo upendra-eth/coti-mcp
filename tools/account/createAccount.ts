@@ -1,18 +1,14 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const CREATE_ACCOUNT: Tool = {
+export const CREATE_ACCOUNT: ToolAnnotations = {
+    title: "Create Account",
     name: "create_account",
     description: "Create a new COTI account with a randomly generated private key and AES key. Returns the new account address, private key, and AES key.",
     inputSchema: {
-        type: "object",
-        properties: {
-            set_as_default: {
-                type: "boolean",
-                description: "Optional, whether to set the new account as the default account. Default is false."
-            }
-        }
+        set_as_default: z.boolean().optional().default(false).describe("Optional, whether to set the new account as the default account. Default is false."),
     }
 };
 
@@ -76,7 +72,7 @@ export async function performCreateAccount(set_as_default: boolean = false): Pro
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function createAccountHandler(args: Record<string, unknown> | undefined) {
+export async function createAccountHandler(args: any): Promise<any> {
     if (!isCreateAccountArgs(args)) {
         throw new Error("Invalid arguments for create_account");
     }

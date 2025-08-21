@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const GET_PRIVATE_ERC721_BALANCE: Tool = {
+export const GET_PRIVATE_ERC721_BALANCE: ToolAnnotations = {
+    title: "Get Private ERC721 Balance",
     name: "get_private_erc721_balance",
     description:
         "Get the balance of a private ERC721 NFT collection on the COTI blockchain. " +
@@ -11,18 +13,8 @@ export const GET_PRIVATE_ERC721_BALANCE: Tool = {
         "Requires token contract address and account address as input. " +
         "Returns the number of NFTs owned by the specified address.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            account_address: {
-                type: "string",
-                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-        },
-        required: ["token_address", "account_address"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        account_address: z.string().describe("COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
     },
 };
 
@@ -47,7 +39,7 @@ export function isGetPrivateERC721BalanceArgs(args: unknown): args is { token_ad
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getPrivateERC721BalanceHandler(args: Record<string, unknown> | undefined) {
+export async function getPrivateERC721BalanceHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetPrivateERC721BalanceArgs(args)) {
         throw new Error("Invalid arguments for get_private_erc721_balance");
     }
