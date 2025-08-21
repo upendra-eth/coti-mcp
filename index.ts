@@ -13,6 +13,7 @@ import { GENERATE_AES_KEY, generateAesKeyHandler } from "./tools/account/generat
 import { IMPORT_ACCOUNTS, importAccountsHandler } from "./tools/account/importAccounts.js";
 import { LIST_ACCOUNTS, listAccountsHandler } from "./tools/account/listAccounts.js";
 import { SIGN_MESSAGE, signMessageHandler } from "./tools/account/signMessage.js";
+import { SWITCH_NETWORK, switchNetworkHandler } from "./tools/account/switchNetwork.js";
 import { VERIFY_SIGNATURE, verifySignatureHandler } from "./tools/account/verifySignature.js";
 import { MINT_PRIVATE_ERC20_TOKEN, mintPrivateERC20TokenHandler } from "./tools/erc20/mintPrivateErc20Token.js";
 import { TRANSFER_PRIVATE_ERC20_TOKEN, transferPrivateERC20TokenHandler } from "./tools/erc20/transferPrivateErc20.js";
@@ -105,6 +106,11 @@ export default function createStatelessServer({
   server.registerTool("sign_message", 
     SIGN_MESSAGE,
     signMessageHandler
+  );
+
+  server.registerTool("switch_network", 
+    SWITCH_NETWORK,
+    switchNetworkHandler
   );
 
   server.registerTool("verify_signature", 
