@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { CHANGE_DEFAULT_ACCOUNT, changeDefaultAccountHandler } from './tools/account/changeDefaultAccount.js';
 import { CREATE_ACCOUNT, createAccountHandler } from './tools/account/createAccount.js';
+import { GET_CURRENT_NETWORK, getCurrentNetworkHandler } from './tools/account/getCurrentNetwork.js';
 import { encryptValueHandler } from "./tools/account/encryptValue.js";
 import { decryptValueHandler } from "./tools/account/decryptValue.js";
 import { EXPORT_ACCOUNTS, exportAccountsHandler } from "./tools/account/exportAccounts.js";
@@ -76,6 +77,11 @@ export default function createStatelessServer({
   server.registerTool("decrypt_value", 
     DECRYPT_VALUE, 
     decryptValueHandler
+  );
+
+  server.registerTool("get_current_network", 
+    GET_CURRENT_NETWORK,
+    getCurrentNetworkHandler
   );
 
   server.registerTool("encrypt_value", 
