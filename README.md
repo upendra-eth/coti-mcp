@@ -1,4 +1,4 @@
-# <img src="https://coti.io/favicon.ico" height="32"> COTI Blockchain MCP
+# <img src="https://coti.io/images/favicon.ico" height="32"> COTI MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@davibauer/coti-mcp)](https://smithery.ai/server/@davibauer/coti-mcp)
 
