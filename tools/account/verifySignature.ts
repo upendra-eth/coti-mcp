@@ -1,7 +1,9 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { ethers } from "ethers";
+import { z } from "zod";
 
-export const VERIFY_SIGNATURE: Tool = {
+export const VERIFY_SIGNATURE: ToolAnnotations = {
+    title: "Verify Signature",
     name: "verify_signature",
     description:
         "Verify a message signature and recover the address that signed it. " +
@@ -9,18 +11,8 @@ export const VERIFY_SIGNATURE: Tool = {
         "Requires the original message and the signature as input. " +
         "Returns the address that created the signature.",
     inputSchema: {
-        type: "object",
-        properties: {
-            message: {
-                type: "string",
-                description: "Original message that was signed",
-            },
-            signature: {
-                type: "string",
-                description: "Signature to verify (hexadecimal string)",
-            },
-        },
-        required: ["message", "signature"],
+        message: z.string().describe("Original message that was signed"),
+        signature: z.string().describe("Signature to verify (hexadecimal string)"),
     },
 };
 
@@ -63,7 +55,7 @@ export async function performVerifySignature(message: string, signature: string)
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function verifySignatureHandler(args: Record<string, unknown> | undefined) {
+export async function verifySignatureHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isVerifySignatureArgs(args)) {
         throw new Error("Invalid arguments for verify_signature");
     }

@@ -1,36 +1,22 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet, Contract } from "@coti-io/coti-ethers";
 import { buildStringInputText } from "@coti-io/coti-sdk-typescript";
 import { ERC721_ABI } from "../constants/abis.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const MINT_PRIVATE_ERC721_TOKEN: Tool = {
+export const MINT_PRIVATE_ERC721_TOKEN: ToolAnnotations = {
+    title: "Mint Private ERC721 Token",
     name: "mint_private_erc721_token",
     description:
         "Mint a new private ERC721 NFT token on the COTI blockchain. " +
         "This creates a new NFT in the specified collection with the provided token URI. " +
         "Returns the transaction hash and token ID upon successful minting.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            to_address: {
-                type: "string",
-                description: "Address to receive the minted NFT",
-            },
-            token_uri: {
-                type: "string",
-                description: "URI for the token metadata (can be IPFS URI or any other URI), Example: \"https://example.com/token/0\"",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the minting transaction",
-            },
-        },
-        required: ["token_address", "to_address", "token_uri"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        to_address: z.string().describe("Address to receive the minted NFT"),
+        token_uri: z.string().describe("URI for the token metadata (can be IPFS URI or any other URI), Example: \"https://example.com/token/0\""),
+        gas_limit: z.string().optional().describe("Optional gas limit for the minting transaction"),
     },
 };
 
@@ -58,7 +44,7 @@ export function isMintPrivateERC721TokenArgs(args: unknown): args is { token_add
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function mintPrivateERC721TokenHandler(args: Record<string, unknown> | undefined) {
+export async function mintPrivateERC721TokenHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isMintPrivateERC721TokenArgs(args)) {
         throw new Error("Invalid arguments for mint_private_erc721_token");
     }

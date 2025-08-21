@@ -1,18 +1,14 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { getAccountKeys, getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const GENERATE_AES_KEY: Tool = {
+export const GENERATE_AES_KEY: ToolAnnotations = {
+    title: "Generate AES Key",
     name: "generate_aes_key",
     description: "Generate a new AES key for the current account. Returns the AES key.",
     inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "The address of the account to generate the AES key for."
-            }
-        }
+        account_address: z.string().describe("The address of the account to generate the AES key for."),
     }
 };
 
@@ -80,7 +76,7 @@ export async function performGenerateAesKey(account_address: string): Promise<st
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function generateAesKeyHandler(args: Record<string, unknown> | undefined) {
+export async function generateAesKeyHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGenerateAesKeyArgs(args)) {
         throw new Error("Invalid arguments for generate_aes_key");
     }

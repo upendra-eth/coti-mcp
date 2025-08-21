@@ -1,8 +1,10 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
+import { z } from "zod";
 
-export const ENCRYPT_VALUE: Tool = {
+export const ENCRYPT_VALUE: ToolAnnotations = {
+    title: "Encrypt Value",
     name: "encrypt_value",
     description:
         "Encrypt a value using the COTI AES key. " +
@@ -10,22 +12,9 @@ export const ENCRYPT_VALUE: Tool = {
         "Requires a value, contract address, and function selector as input. " +
         "Returns the signature.",
     inputSchema: {
-        type: "object",
-        properties: {
-            message: {
-                type: "string",
-                description: "Message to encrypt",
-            },
-            contract_address: {
-                type: "string",
-                description: "Contract address",
-            },
-            function_selector: {
-                type: "string",
-                description: "Function selector. To get the function selector, use the keccak256 hash of the function signature. For instance, for the transfer function of an ERC20 token, the function selector is '0xa9059cbb'.",
-            },
-        },
-        required: ["message", "contract_address", "function_selector"],
+        message: z.string().describe("Message to encrypt"),
+        contract_address: z.string().describe("Contract address"),
+        function_selector: z.string().describe("Function selector. To get the function selector, use the keccak256 hash of the function signature. For instance, for the transfer function of an ERC20 token, the function selector is '0xa9059cbb'."),
     },
 };
 
@@ -77,7 +66,7 @@ export async function performEncryptValue(message: bigint | number | string, con
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function encryptValueHandler(args: Record<string, unknown> | undefined) {
+export async function encryptValueHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isEncryptValueArgs(args)) {
         throw new Error("Invalid arguments for encrypt_value");
     }

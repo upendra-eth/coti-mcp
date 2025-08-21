@@ -1,23 +1,12 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 
-export const EXPORT_ACCOUNTS: Tool = {
-    name: "export_accounts",
+export const EXPORT_ACCOUNTS: ToolAnnotations = {
+    title: "Export accounts",
     description: "Backup all available COTI accounts and export them as a JSON string for future import. Returns a JSON string that can be copied and used for importing later.",
     inputSchema: {
-        type: "object",
-        properties: {
-            include_sensitive_data: {
-                type: "boolean",
-                description: "Whether to include sensitive data (private keys and AES keys) in the output. Default is true."
-            },
-            account_addresses: {
-                type: "array",
-                items: {
-                    type: "string"
-                },
-                description: "Optional list of account addresses to export. If not provided, all accounts will be exported."
-            }
-        }
+        include_sensitive_data: z.boolean().optional().default(true).describe("Optional, whether to include sensitive data (private keys and AES keys) in the output. Default is true."),
+        account_addresses: z.array(z.string()).optional().describe("Optional list of account addresses to export. If not provided, all accounts will be exported."),
     }
 };
 
@@ -133,7 +122,7 @@ export async function performExportAccounts(args: ExportAccountsArgs): Promise<s
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function exportAccountsHandler(args: Record<string, unknown> | undefined) {
+export async function exportAccountsHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isExportAccountsArgs(args)) {
         return {
             content: [{ type: "text", text: "Invalid arguments provided." }],

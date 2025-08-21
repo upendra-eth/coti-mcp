@@ -1,8 +1,10 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet } from '@coti-io/coti-ethers';
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const TRANSFER_NATIVE: Tool = {
+export const TRANSFER_NATIVE: ToolAnnotations = {
+    title: "Transfer Native",
     name: "transfer_native",
     description:
         "Transfer native COTI tokens to another wallet. " +
@@ -10,22 +12,9 @@ export const TRANSFER_NATIVE: Tool = {
         "Requires recipient address and amount in Wei as input. " +
         "Returns the transaction hash upon successful transfer.",
     inputSchema: {
-        type: "object",
-        properties: {
-            recipient_address: {
-                type: "string",
-                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of COTI to transfer (in Wei)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["recipient_address", "amount_wei"],
+        recipient_address: z.string().describe("Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        amount_wei: z.string().describe("Amount of COTI to transfer (in Wei)"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction"),
     },
 };
 
@@ -84,7 +73,7 @@ export function isTransferNativeArgs(args: unknown): args is { recipient_address
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function transferNativeHandler(args: Record<string, unknown> | undefined) {
+export async function transferNativeHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isTransferNativeArgs(args)) {
         throw new Error("Invalid arguments for transfer_native");
     }

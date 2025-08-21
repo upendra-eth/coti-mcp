@@ -1,25 +1,17 @@
 import { getDefaultProvider, Wallet, Contract, ethers } from '@coti-io/coti-ethers';
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { decryptUint } from '@coti-io/coti-sdk-typescript';
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const GET_PRIVATE_ERC20_TOKEN_BALANCE: Tool = {
+export const GET_PRIVATE_ERC20_TOKEN_BALANCE: ToolAnnotations = {
+    title: "Get Private ERC20 Token Balance",
     name: "get_private_erc20_balance",
     description: "Get the balance of a private ERC20 token on the COTI blockchain. This is used for checking the current balance of a private token for a COTI account. Requires a COTI account address and token contract address as input. Returns the decrypted token balance.",
     inputSchema: {
-        type: "object",
-        properties: {
-            account_address: {
-                type: "string",
-                description: "COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-        },
-        required: ["account_address", "token_address"],
+        account_address: z.string().describe("COTI account address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        token_address: z.string().describe("ERC20 token contract address on COTI blockchain"),
     },
 };
 
@@ -54,7 +46,7 @@ export function isGetPrivateERC20TokenBalanceArgs(args: unknown): args is {
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getPrivateERC20BalanceHandler(args: Record<string, unknown> | undefined) {
+export async function getPrivateERC20BalanceHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetPrivateERC20TokenBalanceArgs(args)) {
         throw new Error("Invalid arguments for get_private_erc20_balance");
     }

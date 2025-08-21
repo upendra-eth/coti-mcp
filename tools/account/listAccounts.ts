@@ -1,14 +1,13 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { maskSensitiveString } from "../shared/account.js";
 import { getNetwork } from "../shared/account.js";
+import { z } from "zod";
 
-export const LIST_ACCOUNTS: Tool = {
+export const LIST_ACCOUNTS: ToolAnnotations = {
+    title: "List Accounts",
     name: "list_accounts",
     description: "List all available COTI accounts configured in the environment. Returns the account addresses, current default account, and masked versions of the private and AES keys.",
-    inputSchema: {
-        type: "object",
-        properties: {}
-    }
+    inputSchema: {}
 };
 
 /**
@@ -53,7 +52,7 @@ export async function performListAccounts(): Promise<string> {
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function listAccountsHandler(args: Record<string, unknown> | undefined) {
+export async function listAccountsHandler(args: Record<string, unknown> | undefined): Promise<any> {
     const results = await performListAccounts();
     return {
         content: [{ type: "text", text: results }],

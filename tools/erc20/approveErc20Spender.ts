@@ -1,13 +1,15 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getDefaultProvider, Wallet, Contract } from '@coti-io/coti-ethers';
 import { buildInputText } from '@coti-io/coti-sdk-typescript';
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ERC20_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
 /**
  * Tool definition for approving a spender to use ERC20 tokens on the COTI blockchain
  */
-export const APPROVE_ERC20_SPENDER: Tool = {
+export const APPROVE_ERC20_SPENDER: ToolAnnotations = {
+    title: "Approve ERC20 Spender",
     name: "approve_erc20_spender",
     description:
         "Approve another address to spend tokens on behalf of the owner. " +
@@ -15,26 +17,10 @@ export const APPROVE_ERC20_SPENDER: Tool = {
         "Requires token contract address, spender address, and amount as input. " +
         "Returns the transaction hash upon successful approval.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC20 token contract address on COTI blockchain",
-            },
-            spender_address: {
-                type: "string",
-                description: "Address to approve as spender, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            amount_wei: {
-                type: "string",
-                description: "Amount of tokens to approve (in Wei)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "spender_address", "amount_wei"],
+        token_address: z.string().describe("ERC20 token contract address on COTI blockchain"),
+        spender_address: z.string().describe("Address to approve as spender, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        amount_wei: z.string().describe("Amount of tokens to approve (in Wei)"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction"),
     },
 };
 
@@ -62,7 +48,7 @@ export function isApproveERC20SpenderArgs(args: unknown): args is { token_addres
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function approveERC20SpenderHandler(args: Record<string, unknown> | undefined) {
+export async function approveERC20SpenderHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isApproveERC20SpenderArgs(args)) {
         throw new Error("Invalid arguments for approve_erc20_spender");
     }

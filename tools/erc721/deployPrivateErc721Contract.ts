@@ -1,31 +1,20 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ethers, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const DEPLOY_PRIVATE_ERC721_CONTRACT: Tool = {
+export const DEPLOY_PRIVATE_ERC721_CONTRACT: ToolAnnotations = {
+    title: "Deploy Private ERC721 Contract",
     name: "deploy_private_erc721_contract",
     description:
         "Deploy a new standard private ERC721 NFT contract on the COTI blockchain. " +
         "This creates a new private NFT collection with the specified name and symbol. " +
         "Returns the deployed contract address upon successful deployment.",
     inputSchema: {
-        type: "object",
-        properties: {
-            name: {
-                type: "string",
-                description: "Name of the NFT collection",
-            },
-            symbol: {
-                type: "string",
-                description: "Symbol of the NFT collection (typically 3-5 characters)",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the deployment transaction",
-            },
-        },
-        required: ["name", "symbol"],
+        name: z.string().describe("Name of the NFT collection"),
+        symbol: z.string().describe("Symbol of the NFT collection (typically 3-5 characters)"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the deployment transaction"),
     },
 };
 
@@ -51,7 +40,7 @@ export function isDeployPrivateERC721ContractArgs(args: unknown): args is { name
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function deployPrivateERC721ContractHandler(args: Record<string, unknown> | undefined) {
+export async function deployPrivateERC721ContractHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isDeployPrivateERC721ContractArgs(args)) {
         throw new Error("Invalid arguments for deploy_private_erc721_contract");
     }

@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const APPROVE_PRIVATE_ERC721: Tool = {
+export const APPROVE_PRIVATE_ERC721: ToolAnnotations = {
+    title: "Approve Private ERC721",
     name: "approve_private_erc721",
     description:
         "Approve an address to transfer a specific private ERC721 NFT token on the COTI blockchain. " +
@@ -11,26 +13,10 @@ export const APPROVE_PRIVATE_ERC721: Tool = {
         "Requires token contract address, token ID, and spender address as input. " +
         "Returns the transaction hash upon successful approval.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            token_id: {
-                type: "string",
-                description: "ID of the NFT token to approve for transfer",
-            },
-            spender_address: {
-                type: "string",
-                description: "Address to approve as spender, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "token_id", "spender_address"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        token_id: z.string().describe("ID of the NFT token to approve for transfer"),
+        spender_address: z.string().describe("Address to approve as spender, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction")
     },
 };
 
@@ -60,7 +46,7 @@ export function isApprovePrivateERC721Args(
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function approvePrivateERC721Handler(args: Record<string, unknown> | undefined) {
+export async function approvePrivateERC721Handler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isApprovePrivateERC721Args(args)) {
         throw new Error("Invalid arguments for approve_private_erc721");
     }
@@ -86,7 +72,7 @@ export async function performApprovePrivateERC721(
     token_id: string,
     spender_address: string,
     gas_limit?: string
-) {
+): Promise<any> {
     try {
         const provider = getDefaultProvider(getNetwork());
         const currentAccountKeys = getCurrentAccountKeys();

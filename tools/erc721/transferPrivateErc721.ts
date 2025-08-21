@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
+export const TRANSFER_PRIVATE_ERC721_TOKEN: ToolAnnotations = {
+    title: "Transfer Private ERC721 Token",
     name: "transfer_private_erc721",
     description:
         "Transfer a private ERC721 NFT token on the COTI blockchain. " +
@@ -11,37 +13,14 @@ export const TRANSFER_PRIVATE_ERC721_TOKEN: Tool = {
         "Requires token contract address, recipient address, and token ID as input. " +
         "Returns the transaction hash upon successful transfer.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            recipient_address: {
-                type: "string",
-                description: "Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            token_id: {
-                type: "string",
-                description: "ID of the NFT token to transfer",
-            },
-            from_address: {
-                type: "string",
-                description: "Optional, address to transfer from. If not provided, the current account will be used.",
-            },
-            use_safe_transfer: {
-                type: "boolean",
-                description: "Optional, whether to use safeTransferFrom instead of transferFrom. Default is false.",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "recipient_address", "token_id"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        recipient_address: z.string().describe("Recipient COTI address, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        token_id: z.string().describe("ID of the NFT token to transfer"),
+        from_address: z.string().optional().describe("Optional, address to transfer from. If not provided, the current account will be used."),
+        use_safe_transfer: z.boolean().optional().describe("Optional, whether to use safeTransferFrom instead of transferFrom. Default is false."),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction"),
     },
 };
-
 
 /**
  * Checks if the input arguments are valid for the transferPrivateERC721Token tool
@@ -69,7 +48,7 @@ export function isTransferPrivateERC721TokenArgs(args: unknown): args is { token
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function transferPrivateERC721TokenHandler(args: Record<string, unknown> | undefined) {
+export async function transferPrivateERC721TokenHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isTransferPrivateERC721TokenArgs(args)) {
         throw new Error("Invalid arguments for transfer_private_erc721");
     }

@@ -1,35 +1,21 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { ethers, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC20_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const DEPLOY_PRIVATE_ERC20_CONTRACT: Tool = {
+export const DEPLOY_PRIVATE_ERC20_CONTRACT: ToolAnnotations = {
+    title: "Deploy Private ERC20 Contract",
     name: "deploy_private_erc20_contract",
     description:
         "Deploy a new standard private ERC20 token contract on the COTI blockchain. " +
         "This creates a new private token with the specified name, symbol, and decimals. " +
         "Returns the deployed contract address upon successful deployment.",
     inputSchema: {
-        type: "object",
-        properties: {
-            name: {
-                type: "string",
-                description: "Name of the token",
-            },
-            symbol: {
-                type: "string",
-                description: "Symbol of the token (typically 3-5 characters)",
-            },
-            decimals: {
-                type: "number",
-                description: "Number of decimals for the token",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the deployment transaction",
-            },
-        },
-        required: ["name", "symbol", "decimals"],
+        name: z.string().describe("Name of the token"),
+        symbol: z.string().describe("Symbol of the token (typically 3-5 characters)"),
+        decimals: z.number().describe("Number of decimals for the token"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the deployment transaction"),
     },
 };
 
@@ -57,7 +43,7 @@ export function isDeployPrivateERC20ContractArgs(args: unknown): args is { name:
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function deployPrivateERC20ContractHandler(args: Record<string, unknown> | undefined) {
+export async function deployPrivateERC20ContractHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isDeployPrivateERC20ContractArgs(args)) {
         throw new Error("Invalid arguments for deploy_private_erc20_contract");
     }

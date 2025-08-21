@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const GET_PRIVATE_ERC721_TOKEN_URI: Tool = {
+export const GET_PRIVATE_ERC721_TOKEN_URI: ToolAnnotations = {
+    title: "Get Private ERC721 Token URI",
     name: "get_private_erc721_token_uri",
     description:
         "Get the tokenURI for a private ERC721 NFT token on the COTI blockchain. " +
@@ -11,18 +13,8 @@ export const GET_PRIVATE_ERC721_TOKEN_URI: Tool = {
         "Requires token contract address and token ID as input. " +
         "Returns the decrypted tokenURI.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            token_id: {
-                type: "string",
-                description: "ID of the NFT token to get the URI for",
-            },
-        },
-        required: ["token_address", "token_id"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        token_id: z.string().describe("ID of the NFT token to get the URI for"),
     },
 };
 
@@ -47,7 +39,7 @@ export function isGetPrivateERC721TokenURIArgs(args: unknown): args is { token_a
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function getPrivateERC721TokenURIHandler(args: Record<string, unknown> | undefined) {
+export async function getPrivateERC721TokenURIHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isGetPrivateERC721TokenURIArgs(args)) {
         throw new Error("Invalid arguments for get_private_erc721_token_uri");
     }

@@ -1,25 +1,14 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 
-export const IMPORT_ACCOUNTS: Tool = {
+export const IMPORT_ACCOUNTS: ToolAnnotations = {
+    title: "Import Accounts",
     name: "import_accounts",
     description: "Import COTI accounts from a JSON backup string previously created with the export_accounts tool.",
     inputSchema: {
-        type: "object",
-        properties: {
-            backup_data: {
-                type: "string",
-                description: "The JSON backup string containing the accounts to import. Example:\n\n{\n    \"timestamp\": \"2025-06-03T17:18:55.123Z\",\n    \"accounts\": [\n        {\n            \"address\": \"0x123...\",\n            \"private_key\": \"0x456...\",\n            \"aes_key\": \"0x789...\",\n            \"is_default\": true\n        },\n        ...\n    ]\n}\n"
-            },
-            merge_with_existing: {
-                type: "boolean",
-                description: "Whether to merge with existing accounts or replace them. Default is true (merge)."
-            },
-            set_default_account: {
-                type: "string",
-                description: "Optional address to set as the default account after import. If not provided, will use the default from the backup."
-            }
-        },
-        required: ["backup_data"]
+        backup_data: z.string().describe("The JSON backup string containing the accounts to import. Example:\n\n{\n    \"timestamp\": \"2025-06-03T17:18:55.123Z\",\n    \"accounts\": [\n        {\n            \"address\": \"0x123...\",\n            \"private_key\": \"0x456...\",\n            \"aes_key\": \"0x789...\",\n            \"is_default\": true\n        },\n        ...\n    ]\n}\n"),
+        merge_with_existing: z.boolean().describe("Whether to merge with existing accounts or replace them. Default is true (merge)."),
+        set_default_account: z.string().describe("Optional address to set as the default account after import. If not provided, will use the default from the backup."),
     }
 };
 
@@ -208,7 +197,7 @@ export async function performImportAccounts(args: ImportAccountsArgs): Promise<s
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function importAccountsHandler(args: Record<string, unknown> | undefined) {
+export async function importAccountsHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isImportAccountsArgs(args)) {
         return {
             content: [{ type: "text", text: "Invalid arguments provided. The 'backup_data' parameter is required and must be a valid JSON string." }],

@@ -1,9 +1,11 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { Contract, getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
 import { ERC721_ABI } from "../constants/abis.js";
+import { z } from "zod";
 
-export const SET_PRIVATE_ERC721_APPROVAL_FOR_ALL: Tool = {
+export const SET_PRIVATE_ERC721_APPROVAL_FOR_ALL: ToolAnnotations = {
+    title: "Set Private ERC721 Approval For All",
     name: "set_private_erc721_approval_for_all",
     description:
         "Approve or revoke an operator to transfer all private ERC721 NFT tokens on the COTI blockchain. " +
@@ -11,26 +13,10 @@ export const SET_PRIVATE_ERC721_APPROVAL_FOR_ALL: Tool = {
         "Requires token contract address, operator address, and approval status as input. " +
         "Returns the transaction hash upon successful approval setting.",
     inputSchema: {
-        type: "object",
-        properties: {
-            token_address: {
-                type: "string",
-                description: "ERC721 token contract address on COTI blockchain",
-            },
-            operator_address: {
-                type: "string",
-                description: "Address to approve as operator, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273",
-            },
-            approved: {
-                type: "boolean",
-                description: "Whether to approve (true) or revoke (false) the operator",
-            },
-            gas_limit: {
-                type: "string",
-                description: "Optional gas limit for the transaction",
-            },
-        },
-        required: ["token_address", "operator_address", "approved"],
+        token_address: z.string().describe("ERC721 token contract address on COTI blockchain"),
+        operator_address: z.string().describe("Address to approve as operator, e.g., 0x0D7C5C1DA069fd7C1fAFBeb922482B2C7B15D273"),
+        approved: z.boolean().describe("Whether to approve (true) or revoke (false) the operator"),
+        gas_limit: z.string().optional().describe("Optional gas limit for the transaction"),
     },
 };
 
@@ -60,7 +46,7 @@ export function isSetPrivateERC721ApprovalForAllArgs(
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function setPrivateERC721ApprovalForAllHandler(args: Record<string, unknown> | undefined) {
+export async function setPrivateERC721ApprovalForAllHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isSetPrivateERC721ApprovalForAllArgs(args)) {
         throw new Error("Invalid arguments for set_private_erc721_approval_for_all");
     }

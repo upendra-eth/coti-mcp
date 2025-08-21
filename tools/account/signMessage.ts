@@ -1,8 +1,10 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentAccountKeys, getNetwork } from "../shared/account.js";
 import { getDefaultProvider, Wallet } from "@coti-io/coti-ethers";
+import { z } from "zod";
 
-export const SIGN_MESSAGE: Tool = {
+export const SIGN_MESSAGE: ToolAnnotations = {
+    title: "Sign Message",
     name: "sign_message",
     description:
         "Sign a message using the COTI private key. " +
@@ -10,15 +12,8 @@ export const SIGN_MESSAGE: Tool = {
         "Requires a message to sign as input. " +
         "Returns the signature.",
     inputSchema: {
-        type: "object",
-        properties: {
-            message: {
-                type: "string",
-                description: "Message to sign",
-            },
-        },
-        required: ["message"],
-    },
+        message: z.string().describe("Message to sign"),
+    }
 };
 
 /**
@@ -61,7 +56,7 @@ export async function performSignMessage(message: string): Promise<string> {
  * @param args The arguments for the tool
  * @returns The tool response
  */
-export async function signMessageHandler(args: Record<string, unknown> | undefined) {
+export async function signMessageHandler(args: Record<string, unknown> | undefined): Promise<any> {
     if (!isSignMessageArgs(args)) {
         throw new Error("Invalid arguments for sign_message");
     }
