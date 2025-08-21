@@ -56,16 +56,11 @@ export function maskSensitiveString(str: string): string {
 }
 
 export function getNetwork(): CotiNetwork {
-    try {
-        const network = process.env.COTI_MCP_NETWORK?.toLowerCase();
-    
-        if (network === 'mainnet') {
-            return CotiNetwork.Mainnet;
-        }
+    const network = process.env.COTI_MCP_NETWORK?.toLowerCase();
 
-        return CotiNetwork.Testnet;
-    } catch (error) {
-        console.error('Error getting network:', error);
-        throw new Error(`Failed to get network: ${error instanceof Error ? error.message : String(error)}`);
+    if (network === 'mainnet') {
+        return CotiNetwork.Mainnet;
     }
+
+    return CotiNetwork.Testnet;
 }
