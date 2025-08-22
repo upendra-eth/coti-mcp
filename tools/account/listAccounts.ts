@@ -1,7 +1,6 @@
 import { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { maskSensitiveString } from "../shared/account.js";
 import { getNetwork } from "../shared/account.js";
-import { z } from "zod";
 
 export const LIST_ACCOUNTS: ToolAnnotations = {
     title: "List Accounts",

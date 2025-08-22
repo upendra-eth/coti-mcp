@@ -61,28 +61,17 @@ export const configSchema = z.object({
   cotiMcpPrivateKey: z.string().describe("COTI MCP private key for signing transactions.").optional(),
   cotiMcpNetwork: z.string().describe("COTI MCP network to connect to.").optional().default("testnet"),
 });
-
-export default function createStatelessServer({
-  config,
-  sessionId,
-}: {
-  config: z.infer<typeof configSchema>;
-  sessionId: string;
-}) {
-
-  const server = new McpServer({
-    name: "COTI MCP Server",
-    version: "0.2.1",
-  });
+export default function ({ config }: { config: z.infer<typeof configSchema> }) {
 
   if (config.cotiMcpAesKey) {
     process.env.COTI_MCP_AES_KEY = config.cotiMcpAesKey;
   }
 
   if (config.cotiMcpPrivateKey) {
-    process.env.COTI_MCP_CURRENT_PRIVATE_KEY = config.cotiMcpPrivateKey;
+    process.env.COTI_MCP_PRIVATE_KEY = config.cotiMcpPrivateKey;
     try {
       const derivedPublicKey = ethers.computeAddress(config.cotiMcpPrivateKey);
+      process.env.COTI_MCP_PUBLIC_KEY = derivedPublicKey;
       process.env.COTI_MCP_CURRENT_PUBLIC_KEY = derivedPublicKey;
     } catch (error) {
       throw new Error(`Failed to derive public key from private key: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -92,6 +81,12 @@ export default function createStatelessServer({
   if (config.cotiMcpNetwork) {
     process.env.COTI_MCP_NETWORK = config.cotiMcpNetwork;
   }
+
+  const server = new McpServer({
+    name: "COTI MCP Server",
+    version: "0.2.1",
+    description: "COTI MCP Server",
+  });
 
   // Account Tools
 
